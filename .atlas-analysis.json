@@ -1,0 +1,119 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "Tenderly CLI",
+  "projectDescription": "CLI tool for Smart Contract error tracking, monitoring and alerting.",
+  "theme": "aspen",
+  "primaryColor": "#9074ee",
+  "lightColor": "#1c142e",
+  "darkColor": "#6c5e8c",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Commands",
+            "pages": [
+              "commands/login",
+              "commands/init",
+              "commands/whoami",
+              "commands/logout"
+            ]
+          },
+          {
+            "group": "Contract Management",
+            "pages": [
+              "commands/contracts/push",
+              "commands/contracts/verify",
+              "commands/contracts/remove"
+            ]
+          },
+          {
+            "group": "Actions",
+            "pages": [
+              "commands/actions/overview",
+              "commands/actions/init",
+              "commands/actions/publish"
+            ]
+          },
+          {
+            "group": "DevNets",
+            "pages": [
+              "commands/devnet/overview",
+              "commands/devnet/spawn-rpc"
+            ]
+          },
+          {
+            "group": "Extensions",
+            "pages": [
+              "commands/extensions/overview",
+              "commands/extensions/init",
+              "commands/extensions/deploy"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/tenderly-yaml",
+              "configuration/global-flags",
+              "configuration/multiple-projects"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/hardhat-integration",
+              "guides/truffle-integration",
+              "guides/foundry-integration"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "groups": [
+          {
+            "group": "CLI Reference",
+            "pages": [
+              "reference/command-list",
+              "reference/environment-variables",
+              "reference/output-formats"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Smart contract verification and monitoring",
+    "Actions for automated smart contract workflows",
+    "DevNets for local blockchain development",
+    "Node extensions for custom RPC methods",
+    "Multi-project contract management",
+    "Integration with Hardhat, Truffle, Foundry, and Brownie"
+  ],
+  "publicApiSurface": [
+    "tenderly login",
+    "tenderly init",
+    "tenderly contracts push",
+    "tenderly contracts verify",
+    "tenderly contracts remove",
+    "tenderly actions init",
+    "tenderly actions publish",
+    "tenderly devnet spawn-rpc",
+    "tenderly extensions init",
+    "tenderly extensions deploy",
+    "tenderly whoami",
+    "tenderly logout",
+    "tenderly version",
+    "tenderly update-check"
+  ]
+}
