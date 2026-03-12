@@ -1,0 +1,306 @@
+---
+title: "tenderly logout"
+description: "Log out of your Tenderly account and clear authentication credentials"
+---
+
+The `tenderly logout` command terminates your current Tenderly CLI session by removing stored authentication credentials from your local configuration.
+
+## Usage
+
+```bash
+tenderly logout
+```
+
+This command has no flags or arguments.
+
+## Prerequisites
+
+<Note>
+  You must be logged in to use this command. If you're not authenticated, the CLI will inform you that you need to log in first.
+</Note>
+
+## Basic Usage
+
+```bash
+tenderly logout
+```
+
+**Output:**
+```
+Successfully logged out.
+
+If you want to login again, use the tenderly login command.
+```
+
+## What Gets Removed
+
+The logout command clears the following credentials from your global configuration (`~/.tenderly/config.yaml`):
+
+- **Access Key** - Your authentication token
+- **Access Key ID** - Token identifier (for email-based logins)
+- **Token** - Legacy authentication token
+- **Email** - Your account email address
+- **Organization Name** - Organization account name
+- **Username** - Your Tenderly username
+- **Account ID** - Your unique account identifier
+
+## Behavior
+
+<Steps>
+
+<Step title="Check Login Status">
+  Verifies you're currently logged in. If not:
+  
+  ```
+  It seems that you are not logged in, in order to logout you need to be logged in first.
+  ```
+</Step>
+
+<Step title="Revoke Token (Email Login Only)">
+  If you logged in using email/password (not access key), the CLI:
+  - Makes an API call to revoke the session token
+  - Ensures the token cannot be used for future requests
+  
+  <Note>
+    If you logged in with `--access-key`, the key is NOT revoked on the server. You must manually revoke it in the Tenderly dashboard if needed.
+  </Note>
+</Step>
+
+<Step title="Clear Local Credentials">
+  Removes all authentication data from your local configuration file.
+</Step>
+
+<Step title="Confirm Logout">
+  Displays a success message with instructions for logging back in.
+</Step>
+
+</Steps>
+
+## Examples
+
+### Standard Logout
+
+```bash
+tenderly logout
+```
+
+**Output:**
+```
+Successfully logged out.
+
+If you want to login again, use the tenderly login command.
+```
+
+### Logout and Re-login
+
+Switch between different accounts:
+
+```bash
+tenderly logout
+tenderly login --authentication-method email
+```
+
+### Verify Logout
+
+Confirm you're logged out:
+
+```bash
+tenderly logout
+tenderly whoami
+```
+
+**Output:**
+```
+Successfully logged out.
+
+You need to be logged in to use this command. Please run 'tenderly login' first.
+```
+
+## Use Cases
+
+### Switch Accounts
+
+When working with multiple Tenderly accounts:
+
+```bash
+# Logout from current account
+tenderly logout
+
+# Login with different credentials
+tenderly login --force
+```
+
+### Security Best Practice
+
+Before leaving a shared workstation:
+
+```bash
+tenderly logout
+```
+
+### CI/CD Cleanup
+
+In automated pipelines, clean up credentials after tasks:
+
+```bash
+#!/bin/bash
+set -e
+
+# Authenticate
+tenderly login --authentication-method access-key --access-key $TENDERLY_ACCESS_KEY
+
+# Perform operations
+tenderly export init
+tenderly push
+
+# Cleanup
+tenderly logout
+```
+
+### Troubleshooting Authentication
+
+If experiencing authentication issues:
+
+```bash
+# Clear existing session
+tenderly logout
+
+# Re-authenticate
+tenderly login
+
+# Verify
+tenderly whoami
+```
+
+## Authentication Method Differences
+
+### Email/Password Login
+
+When logged in via email:
+- Token is **revoked on the server**
+- Session cannot be restored
+- Must re-enter credentials to log back in
+
+```bash
+tenderly login --authentication-method email
+# ... later ...
+tenderly logout  # Token revoked on server
+```
+
+### Access Key Login
+
+When logged in via access key:
+- Access key is **NOT revoked on the server**
+- Only removed from local configuration
+- The same access key can be used to log back in
+- Must manually revoke in dashboard for full invalidation
+
+```bash
+tenderly login --authentication-method access-key --access-key tnd_abc123
+# ... later ...
+tenderly logout  # Only removes from local config
+```
+
+<Warning>
+  If you logged in with an access key and want to fully revoke it, you must do so manually in the Tenderly dashboard at: https://dashboard.tenderly.co/account/authorization
+</Warning>
+
+## Configuration Changes
+
+Before logout, your `~/.tenderly/config.yaml` might look like:
+
+```yaml Before Logout
+account_id: "550e8400-e29b-41d4-a716-446655440000"
+access_key: "tnd_abc123xyz"
+access_key_id: "key-id-123"
+email: "developer@example.com"
+username: "dev-user"
+```
+
+After logout:
+
+```yaml After Logout
+account_id: ""
+access_key: ""
+access_key_id: ""
+email: ""
+organization_name: ""
+username: ""
+token: ""
+```
+
+## Error Scenarios
+
+### Not Logged In
+
+```bash
+tenderly logout
+```
+
+**Output:**
+```
+It seems that you are not logged in, in order to logout you need to be logged in first.
+```
+
+**Note:** This is informational, not an error. No action needed.
+
+### Token Revocation Failure
+
+If the server-side token revocation fails (network issues, etc.):
+- The error is logged silently (debug level)
+- Local credentials are still cleared
+- Logout still succeeds from a local perspective
+
+<Note>
+  Even if server-side revocation fails, your local session is terminated. The token may remain valid on the server until it expires.
+</Note>
+
+## Security Considerations
+
+### Local Credential Storage
+
+Credentials are stored in:
+```
+~/.tenderly/config.yaml
+```
+
+Logout removes credentials from this file but:
+- The file itself remains
+- File permissions are unchanged
+- Other Tenderly configuration remains
+
+### Access Key Management
+
+<Warning>
+  Access keys are not revoked server-side during logout. For maximum security:
+  
+  1. Logout from the CLI: `tenderly logout`
+  2. Revoke the key in the dashboard: https://dashboard.tenderly.co/account/authorization
+  3. Generate a new key if needed
+</Warning>
+
+### Shared Environments
+
+On shared systems:
+
+```bash
+# Always logout when done
+tenderly logout
+
+# Verify credentials are cleared
+cat ~/.tenderly/config.yaml
+```
+
+## Related Commands
+
+- `tenderly login` - Authenticate with Tenderly
+- `tenderly whoami` - Check current authentication status
+- `tenderly login --force` - Switch to a different account
+
+## Next Steps
+
+After logging out:
+
+1. **Log back in**: Use `tenderly login` to authenticate again
+2. **Switch accounts**: Use `tenderly login --force` to log in with different credentials
+3. **Manage access keys**: Visit the [Tenderly dashboard](https://dashboard.tenderly.co/account/authorization) to manage access keys

@@ -1,0 +1,317 @@
+---
+title: "tenderly contracts verify"
+description: "Verify contract source code on Tenderly without active monitoring"
+---
+
+## Overview
+
+The `tenderly contracts verify` command uploads and verifies your smart contracts on Tenderly. Unlike [`push`](/commands/contracts/push), this command **only verifies** the contracts without enabling active monitoring.
+
+<Note>
+Use `verify` when you only need contract verification for debugging existing transactions. Use [`push`](/commands/contracts/push) when you want both verification and active monitoring of new transactions.
+</Note>
+
+## Usage
+
+```bash
+tenderly contracts verify [flags]
+```
+
+## Prerequisites
+
+<Steps>
+  <Step title="Authentication">
+    Log in to Tenderly:
+    
+    ```bash
+    tenderly login
+    ```
+  </Step>
+  
+  <Step title="Compile contracts">
+    Build your contracts to generate artifacts:
+    
+    ```bash
+    # Hardhat
+    npx hardhat compile
+    
+    # Truffle
+    truffle compile
+    
+    # Foundry
+    forge build
+    ```
+  </Step>
+  
+  <Step title="Initialize project">
+    Connect to your Tenderly project:
+    
+    ```bash
+    tenderly init
+    ```
+  </Step>
+</Steps>
+
+## Flags
+
+<ParamField path="--networks" type="string">
+  A comma-separated list of network IDs to verify. Only contracts deployed to the specified networks will be verified.
+  
+  ```bash
+  tenderly contracts verify --networks "1,5"
+  ```
+  
+  **Common Network IDs:**
+  - `1` - Ethereum Mainnet
+  - `5` - Goerli Testnet
+  - `11155111` - Sepolia Testnet
+  - `137` - Polygon Mainnet
+  - `80001` - Polygon Mumbai Testnet
+  - `56` - BNB Smart Chain Mainnet
+  - `97` - BNB Smart Chain Testnet
+  - `42161` - Arbitrum One
+  - `421614` - Arbitrum Sepolia
+  - `10` - Optimism Mainnet
+  - `8453` - Base Mainnet
+</ParamField>
+
+## Configuration
+
+Configure your `tenderly.yaml` file:
+
+```yaml tenderly.yaml
+account_id: your-username-or-org
+project_slug: your-project-name
+```
+
+<Warning>
+The `verify` command uses the project slug from `tenderly.yaml`. Unlike `push`, it does not support multiple projects in a single command.
+</Warning>
+
+## Examples
+
+### Verify All Contracts
+
+Verify all deployed contracts in your build directory:
+
+```bash
+tenderly contracts verify
+```
+
+### Verify Specific Networks
+
+Verify contracts deployed only to Ethereum Mainnet and Polygon:
+
+```bash
+tenderly contracts verify --networks "1,137"
+```
+
+### Verify Testnet Contracts
+
+Verify contracts on test networks:
+
+```bash
+tenderly contracts verify --networks "5,11155111,80001"
+```
+
+## Verification Process
+
+When you run the verify command:
+
+<Steps>
+  <Step title="Contract detection">
+    The CLI scans your build directory for compiled contracts:
+    
+    ```bash
+    Analyzing provider configuration...
+    We have detected the following Smart Contracts:
+    • ERC20Token
+    • NFTMarketplace
+    • Governance (not deployed to any network, will be used as a library contract)
+    ```
+  </Step>
+  
+  <Step title="Upload to Tenderly">
+    Contract source code, ABI, and metadata are uploaded to Tenderly servers for verification.
+  </Step>
+  
+  <Step title="Verification confirmation">
+    Once complete, contracts are verified and available for transaction debugging:
+    
+    ```bash
+    Smart Contracts successfully verified.
+    ```
+  </Step>
+</Steps>
+
+## What Gets Verified
+
+The verification process includes:
+
+- **Source code**: Solidity files with original structure
+- **Contract ABI**: Interface definitions
+- **Bytecode**: Compiled contract code
+- **Compiler settings**: Version, optimization, and other metadata
+- **Dependencies**: Imported libraries and contracts
+
+## Verify vs Push
+
+<CardGroup cols={2}>
+  <Card title="tenderly contracts verify" icon="shield-check">
+    **Use when:**
+    - You only need source code verification
+    - Debugging specific past transactions
+    - One-time contract verification
+    - No monitoring needed
+    
+    **Result:** Contract verified, no active monitoring
+  </Card>
+  
+  <Card title="tenderly contracts push" icon="upload">
+    **Use when:**
+    - You want transaction monitoring
+    - Need real-time alerts
+    - Tracking contract activity
+    - Active development/production
+    
+    **Result:** Contract verified + active monitoring enabled
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="No contracts detected in build directory">
+    **Cause**: Missing or invalid build artifacts.
+    
+    **Solution**:
+    ```bash
+    # Recompile your contracts
+    npx hardhat compile  # or truffle compile / forge build
+    
+    # Verify build directory exists
+    ls -la artifacts/    # Hardhat
+    ls -la build/        # Truffle
+    ls -la out/          # Foundry
+    ```
+  </Accordion>
+  
+  <Accordion title="No migrated contracts detected">
+    **Cause**: Contracts haven't been deployed to any network.
+    
+    **Solution**:
+    1. Deploy contracts to a network first
+    2. Ensure deployment information is in build artifacts
+    3. For OpenZeppelin projects, run:
+       ```bash
+       npx oz add ContractName
+       npx oz deploy
+       ```
+  </Accordion>
+  
+  <Accordion title="Wrong folder structure detected">
+    **Cause**: CLI can't find framework configuration files.
+    
+    **Solution**:
+    1. Ensure you're in the project root directory
+    2. Use `--project-dir` flag to specify directory:
+       ```bash
+       tenderly contracts verify --project-dir /path/to/project
+       ```
+    3. Or use `--force` flag to bypass structure check:
+       ```bash
+       tenderly contracts verify --force
+       ```
+  </Accordion>
+  
+  <Accordion title="Some contracts not verified">
+    **Cause**: Contracts may be on unsupported networks or have issues.
+    
+    **Solution**:
+    1. Check the network IDs in error output
+    2. Verify deployment addresses are correct
+    3. Ensure all networks are supported by Tenderly
+    4. Check compiler version compatibility
+  </Accordion>
+</AccordionGroup>
+
+## Supported Frameworks
+
+The verify command works with:
+
+- **Hardhat**: Reads from `artifacts/` directory
+- **Truffle**: Reads from `build/contracts/` directory
+- **Foundry**: Reads from `out/` directory
+- **Brownie**: Reads from `build/contracts/` directory
+- **OpenZeppelin**: Requires special setup (see troubleshooting)
+
+## Advanced Usage
+
+### Verify with Project Directory Flag
+
+Specify a custom project directory:
+
+```bash
+tenderly contracts verify --project-dir ./my-contracts
+```
+
+### Force Verification
+
+Bypass directory structure validation:
+
+```bash
+tenderly contracts verify --force
+```
+
+### Verify Specific Network Deployments
+
+Combine with network filtering for precise control:
+
+```bash
+# Verify only mainnet deployments
+tenderly contracts verify --networks "1"
+
+# Verify multiple specific networks
+tenderly contracts verify --networks "137,42161,10"
+```
+
+## Network ID Reference
+
+Common network IDs for verification:
+
+| Network | Chain ID | Network ID |
+|---------|----------|------------|
+| Ethereum Mainnet | 1 | `"1"` |
+| Sepolia | 11155111 | `"11155111"` |
+| Polygon | 137 | `"137"` |
+| Polygon Mumbai | 80001 | `"80001"` |
+| BSC | 56 | `"56"` |
+| Arbitrum One | 42161 | `"42161"` |
+| Optimism | 10 | `"10"` |
+| Base | 8453 | `"8453"` |
+| Avalanche C-Chain | 43114 | `"43114"` |
+
+<Note>
+Network IDs should be passed as strings in the `--networks` flag.
+</Note>
+
+## Best Practices
+
+1. **Verify immediately after deployment**: This ensures your contracts are debuggable right away
+2. **Use network filters**: Only verify networks you're actively working with
+3. **Keep build artifacts**: Don't delete build directories between deployment and verification
+4. **Check framework compatibility**: Ensure your framework is supported
+5. **Upgrade to push**: Consider using `push` instead if you need monitoring
+
+## Related Commands
+
+- [`tenderly contracts push`](/commands/contracts/push) - Push and monitor contracts
+- [`tenderly contracts remove`](/commands/contracts/remove) - Remove verified contracts
+- [`tenderly init`](/commands/init) - Initialize project configuration
+- [`tenderly login`](/commands/login) - Authenticate with Tenderly
+
+## See Also
+
+- [Contract Verification Documentation](https://docs.tenderly.co/contract-verification)
+- [Hardhat Plugin](https://docs.tenderly.co/contract-verification/hardhat)
+- [Foundry Integration](https://docs.tenderly.co/contract-verification/foundry)

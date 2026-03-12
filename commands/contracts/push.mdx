@@ -1,0 +1,261 @@
+---
+title: "tenderly contracts push"
+description: "Push deployed contracts to Tenderly for active monitoring and debugging"
+---
+
+## Overview
+
+The `tenderly contracts push` command uploads your deployed smart contracts to your Tenderly project. Once pushed, contracts are actively monitored and can be debugged using Tenderly's advanced tools.
+
+<Note>
+This command is intended for contracts deployed to **public networks**. For local development, consider using [Tenderly DevNets](/devnets/intro) or the [Hardhat plugin](https://docs.tenderly.co/monitoring/smart-contract-verification/verifying-contracts-using-the-tenderly-hardhat-plugin).
+</Note>
+
+## Usage
+
+```bash
+tenderly contracts push [flags]
+```
+
+## Prerequisites
+
+<Steps>
+  <Step title="Build your contracts">
+    Ensure your contracts are compiled and build artifacts exist:
+    
+    ```bash
+    # For Hardhat
+    npx hardhat compile
+    
+    # For Truffle
+    truffle compile
+    
+    # For Foundry
+    forge build
+    ```
+  </Step>
+  
+  <Step title="Initialize Tenderly">
+    Connect your project to Tenderly:
+    
+    ```bash
+    tenderly init
+    ```
+  </Step>
+  
+  <Step title="Deploy contracts">
+    Deploy your contracts to a supported network. The CLI will read deployment information from your framework's build directory.
+  </Step>
+</Steps>
+
+## Flags
+
+<ParamField path="--networks" type="string">
+  A comma-separated list of network IDs to push. Only contracts deployed to these networks will be uploaded.
+  
+  ```bash
+  tenderly contracts push --networks "1,5,137"
+  ```
+  
+  **Common Network IDs:**
+  - `1` - Ethereum Mainnet
+  - `5` - Goerli Testnet
+  - `11155111` - Sepolia Testnet
+  - `137` - Polygon Mainnet
+  - `80001` - Polygon Mumbai
+  - `56` - BSC Mainnet
+  - `42161` - Arbitrum One
+  - `10` - Optimism Mainnet
+</ParamField>
+
+<ParamField path="--tag" type="string">
+  Optional tag for filtering and referencing pushed contracts. Tags help organize and identify contract deployments.
+  
+  ```bash
+  tenderly contracts push --tag "v1.0.0"
+  tenderly contracts push --tag "production"
+  ```
+  
+  Tags are useful for:
+  - Version tracking
+  - Environment identification (staging, production)
+  - Deployment grouping
+</ParamField>
+
+<ParamField path="--project-slug" type="string">
+  The slug of a specific project to push contracts to. Use this when pushing to a single project from a multi-project configuration.
+  
+  ```bash
+  tenderly contracts push --project-slug "my-project"
+  ```
+</ParamField>
+
+## Configuration
+
+### Single Project Setup
+
+Configure your `tenderly.yaml` file with a single project:
+
+```yaml tenderly.yaml
+account_id: your-username
+project_slug: my-project
+```
+
+### Multiple Projects Setup
+
+Push contracts to multiple projects simultaneously by defining a `projects` map:
+
+```yaml tenderly.yaml
+projects:
+  my-mainnet-project:
+    networks:
+      - "1"    # Ethereum Mainnet
+      - "137"  # Polygon Mainnet
+  
+  my-testnet-project:
+    networks:
+      - "5"        # Goerli
+      - "11155111" # Sepolia
+  
+  my-all-networks-project:
+    # Empty networks array pushes to all detected networks
+  
+  company-account/shared-project:
+    # Use full identifier for shared/organization projects
+    networks:
+      - "1"
+```
+
+<Warning>
+When using multiple projects, remove the `project_slug` property from your configuration. The CLI will push to all configured projects unless you specify `--project-slug`.
+</Warning>
+
+## Examples
+
+### Basic Push
+
+Push all deployed contracts from the current project:
+
+```bash
+tenderly contracts push
+```
+
+### Push Specific Networks
+
+Push only contracts deployed to Ethereum Mainnet and Polygon:
+
+```bash
+tenderly contracts push --networks "1,137"
+```
+
+### Push with Tag
+
+Push contracts with a version tag for tracking:
+
+```bash
+tenderly contracts push --tag "v2.1.0"
+```
+
+### Push to Specific Project
+
+When you have multiple projects configured, push to only one:
+
+```bash
+tenderly contracts push --project-slug "my-mainnet-project" --tag "production"
+```
+
+### Combined Flags
+
+Push specific networks with a tag to a specific project:
+
+```bash
+tenderly contracts push \
+  --project-slug "my-project" \
+  --networks "1,137" \
+  --tag "release-2024-03"
+```
+
+## What Gets Pushed
+
+The CLI analyzes your build directory and pushes:
+
+- **Deployed contracts**: Contracts with network deployment information
+- **Library contracts**: Non-deployed contracts used as libraries
+- **Source code**: Solidity source files for verification
+- **ABI and bytecode**: Contract interfaces and compiled code
+- **Compiler metadata**: Compiler version and settings
+
+## Output
+
+Successful push displays:
+
+```bash
+Analyzing Hardhat configuration...
+We have detected the following Smart Contracts:
+• MyToken
+• MyNFT
+• Governance (not deployed to any network, will be used as a library contract)
+
+Successfully pushed Smart Contracts for project my-project. 
+You can view your contracts at https://dashboard.tenderly.co/username/my-project/contracts
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="No contracts detected in build directory">
+    **Cause**: Build artifacts don't exist or are in the wrong location.
+    
+    **Solution**:
+    1. Run your framework's compile command
+    2. Ensure the build directory exists
+    3. Check that contracts were actually deployed
+  </Accordion>
+  
+  <Accordion title="No migrated contracts detected">
+    **Cause**: Contracts haven't been deployed to any network.
+    
+    **Solution**:
+    1. Deploy your contracts to a network first
+    2. Ensure deployment was successful
+    3. Check that network information is in build artifacts
+  </Accordion>
+  
+  <Accordion title="Some contracts weren't pushed">
+    **Cause**: Contracts may be deployed to unsupported networks.
+    
+    **Solution**:
+    1. Check the network IDs in the error message
+    2. Verify the networks are supported by Tenderly
+    3. Ensure deployment addresses are correct
+  </Accordion>
+  
+  <Accordion title="Project configuration not found">
+    **Cause**: Invalid project slug or missing configuration.
+    
+    **Solution**:
+    1. Run `tenderly init` to set up configuration
+    2. Verify project slug in `tenderly.yaml`
+    3. Check that the project exists in your Tenderly dashboard
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+1. **Use tags for organization**: Tag deployments by version, environment, or feature
+2. **Filter networks**: Use `--networks` to push only relevant deployments
+3. **Multi-project workflows**: Configure multiple projects for different environments
+4. **Verify after push**: Check the Tenderly dashboard to confirm contracts are visible
+5. **Combine with CI/CD**: Automate contract pushing in deployment pipelines
+
+## Related Commands
+
+- [`tenderly contracts verify`](/commands/contracts/verify) - Verify contracts without active monitoring
+- [`tenderly contracts remove`](/commands/contracts/remove) - Remove contracts from Tenderly
+- [`tenderly init`](/commands/init) - Initialize Tenderly project configuration
+
+## See Also
+
+- [Hardhat Verification Guide](https://docs.tenderly.co/contract-verification/hardhat)
+- [Foundry Verification Guide](https://docs.tenderly.co/contract-verification/foundry)
+- [Supported Networks](https://docs.tenderly.co/supported-networks-and-languages)

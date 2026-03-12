@@ -1,0 +1,485 @@
+---
+title: 'Command List'
+description: 'Complete reference of all Tenderly CLI commands'
+icon: 'terminal'
+---
+
+# Command List
+
+This page provides a comprehensive reference of all commands available in the Tenderly CLI.
+
+## Global Commands
+
+### tenderly
+
+The root command for the Tenderly CLI.
+
+```bash
+tenderly [command]
+```
+
+**Description:** Tenderly CLI is a suite of development tools for smart contracts which allows you to monitor and debug them on any network.
+
+<Accordion title="Global Flags">
+  <ParamField path="--debug" type="boolean" default="false">
+    Turn on debug level logging
+  </ParamField>
+  
+  <ParamField path="--output" type="string" default="text">
+    Output mode: `text` or `json`
+  </ParamField>
+  
+  <ParamField path="--reset-provider" type="boolean" default="false">
+    Clear set deployment provider. If not provided, will use provider from tenderly.yaml
+  </ParamField>
+  
+  <ParamField path="--global-config" type="string" default="config">
+    Global configuration file name (without the extension)
+  </ParamField>
+  
+  <ParamField path="--project-config" type="string" default="tenderly">
+    Project configuration file name (without the extension)
+  </ParamField>
+  
+  <ParamField path="--project-dir" type="string" default=".">
+    The directory in which your Truffle project resides
+  </ParamField>
+</Accordion>
+
+---
+
+## Authentication Commands
+
+### login
+
+Authenticate with your Tenderly account.
+
+```bash
+tenderly login [flags]
+```
+
+**Description:** Authenticate using email/password or access key to use Tenderly services.
+
+<Accordion title="Flags">
+  <ParamField path="--email" type="string">
+    The email used for logging in
+  </ParamField>
+  
+  <ParamField path="--password" type="string">
+    The password used for logging in
+  </ParamField>
+  
+  <ParamField path="--access-key" type="string">
+    The access key generated in your Tenderly dashboard at https://dashboard.tenderly.co/account/authorization
+  </ParamField>
+  
+  <ParamField path="--authentication-method" type="string">
+    Pick the authentication method: `email` or `access-key`
+  </ParamField>
+  
+  <ParamField path="--force" type="boolean" default="false">
+    Don't check if you are already logged in
+  </ParamField>
+</Accordion>
+
+<CodeGroup>
+```bash Email Login
+tenderly login --authentication-method email
+```
+
+```bash Access Key Login
+tenderly login --authentication-method access-key --access-key YOUR_ACCESS_KEY
+```
+</CodeGroup>
+
+### logout
+
+Log out of the currently logged in Tenderly account.
+
+```bash
+tenderly logout
+```
+
+**Description:** Logs you out by clearing stored authentication tokens.
+
+### whoami
+
+Display information about the currently logged in user.
+
+```bash
+tenderly whoami
+```
+
+**Description:** Shows your user ID, email/organization name, and username.
+
+---
+
+## Project Commands
+
+### init
+
+Initialize Tenderly CLI for a project.
+
+```bash
+tenderly init [flags]
+```
+
+**Description:** Set up a Tenderly project in the current directory by creating a `tenderly.yaml` configuration file.
+
+<Accordion title="Flags">
+  <ParamField path="--project" type="string">
+    The project name to use for generating the configuration file
+  </ParamField>
+  
+  <ParamField path="--create-project" type="boolean" default="false">
+    Creates the project provided by the --project flag if it doesn't exist
+  </ParamField>
+  
+  <ParamField path="--re-init" type="boolean" default="false">
+    Force initializes the project if it was already initialized
+  </ParamField>
+  
+  <ParamField path="--force" type="boolean" default="false">
+    Don't check if the project directory contains the expected directory structure
+  </ParamField>
+</Accordion>
+
+---
+
+## Contract Commands
+
+### contracts
+
+Manage smart contracts in your Tenderly project.
+
+```bash
+tenderly contracts [command]
+```
+
+**Available Commands:**
+- `push` - Push contracts to Tenderly
+- `verify` - Verify contracts on Tenderly
+- `remove` - Remove contracts from project
+
+### contracts push
+
+Push contracts to your Tenderly project for monitoring.
+
+```bash
+tenderly contracts push [flags]
+```
+
+**Description:** Uploads contracts from your build directory to Tenderly. After contracts are pushed, they are actively monitored.
+
+<Accordion title="Flags">
+  <ParamField path="--tag" type="string">
+    Optional tag used for filtering and referencing pushed contracts
+  </ParamField>
+  
+  <ParamField path="--networks" type="string">
+    A comma-separated list of network IDs to push
+  </ParamField>
+  
+  <ParamField path="--project-slug" type="string">
+    The slug of a project you wish to push to
+  </ParamField>
+</Accordion>
+
+<CodeGroup>
+```bash Push All Contracts
+tenderly contracts push
+```
+
+```bash Push with Tag
+tenderly contracts push --tag v1.0.0
+```
+
+```bash Push Specific Networks
+tenderly contracts push --networks 1,5,137
+```
+</CodeGroup>
+
+### contracts verify
+
+Verify all project contracts on Tenderly.
+
+```bash
+tenderly contracts verify [flags]
+```
+
+**Description:** Verifies smart contracts on Tenderly without monitoring them.
+
+<Accordion title="Flags">
+  <ParamField path="--networks" type="string">
+    A comma-separated list of network IDs to verify
+  </ParamField>
+</Accordion>
+
+### contracts remove
+
+Remove contracts from your Tenderly project.
+
+```bash
+tenderly contracts remove [flags]
+```
+
+**Description:** Remove contracts from your project by tag or contract ID.
+
+<Accordion title="Flags">
+  <ParamField path="--tag" type="string">
+    Remove all contracts with matched tag from configured project
+  </ParamField>
+  
+  <ParamField path="--id" type="string">
+    Remove contract with specific ID (format: "eth:{network_id}:{contract_id}")
+  </ParamField>
+  
+  <ParamField path="--project-slug" type="string">
+    The slug of a project you wish to remove contracts from
+  </ParamField>
+</Accordion>
+
+---
+
+## Web3 Actions Commands
+
+### actions
+
+Create, build and deploy Web3 Actions.
+
+```bash
+tenderly actions [command]
+```
+
+**Description:** Web3 Actions run your code in response to on-chain or off-chain events on your smart contracts.
+
+**Available Commands:**
+- `init` - Initialize actions project
+- `build` - Build actions for project
+- `publish` - Publish actions to dashboard
+- `deploy` - Deploy and activate actions
+
+### actions init
+
+Initialize a new Web3 Actions project.
+
+```bash
+tenderly actions init [flags]
+```
+
+**Description:** Guides you through setting up an actions project. Populates sources directory and creates configuration in `tenderly.yaml`.
+
+<Accordion title="Flags">
+  <ParamField path="--project" type="string">
+    The project slug in which the actions will be published & deployed
+  </ParamField>
+  
+  <ParamField path="--sources" type="string">
+    The path where the actions will be created
+  </ParamField>
+  
+  <ParamField path="--language" type="string" default="typescript">
+    Initialize actions for this language. Supported: `javascript`, `typescript`
+  </ParamField>
+  
+  <ParamField path="--template" type="string">
+    Initialize actions from a template (see Tenderly/tenderly-actions)
+  </ParamField>
+</Accordion>
+
+### actions build
+
+Build actions for your project.
+
+```bash
+tenderly actions build
+```
+
+**Description:** Validate configuration and build implementation without deploying. Useful for testing before deployment.
+
+### actions publish
+
+Publish actions to the dashboard.
+
+```bash
+tenderly actions publish
+```
+
+**Description:** Upload actions to the Tenderly dashboard without deploying or activating them.
+
+### actions deploy
+
+Deploy and activate actions.
+
+```bash
+tenderly actions deploy
+```
+
+**Description:** Deploy actions to production. Deployed actions will be scheduled according to their configured triggers.
+
+---
+
+## Node Extensions Commands
+
+### node-extensions
+
+Create, build and deploy Node Extensions.
+
+```bash
+tenderly node-extensions [command]
+```
+
+**Description:** Node Extensions allow you to build and deploy custom RPC endpoints for your dapps. Backed by Web3 Actions.
+
+**Available Commands:**
+- `init` - Initialize node extensions
+- `deploy` - Deploy extensions
+
+### node-extensions init
+
+Initialize node extensions for your project.
+
+```bash
+tenderly node-extensions init [flags]
+```
+
+**Description:** Guides you through setting up extensions in your project. Populates the `node_extensions` section in `tenderly.yaml`.
+
+<Accordion title="Flags">
+  <ParamField path="--name" type="string">
+    Name for the extension
+  </ParamField>
+  
+  <ParamField path="--description" type="string">
+    Description for the extension
+  </ParamField>
+  
+  <ParamField path="--methodName" type="string">
+    Name for the extension method (must begin with "extension_")
+  </ParamField>
+</Accordion>
+
+### node-extensions deploy
+
+Deploy extensions for your project.
+
+```bash
+tenderly node-extensions deploy [flags]
+```
+
+**Description:** Deploys the extension specified in command arguments.
+
+<Accordion title="Flags">
+  <ParamField path="--account" type="string">
+    The account slug in which the extension will be deployed
+  </ParamField>
+  
+  <ParamField path="--project" type="string">
+    The project slug in which the extension will be deployed
+  </ParamField>
+  
+  <ParamField path="--extensionName" type="string">
+    Name of the extension to deploy
+  </ParamField>
+</Accordion>
+
+---
+
+## DevNet Commands
+
+### devnet
+
+Tenderly DevNets commands.
+
+```bash
+tenderly devnet [command]
+```
+
+**Description:** Manage Tenderly DevNets for development and testing.
+
+**Available Commands:**
+- `spawn-rpc` - Spawn a DevNet RPC endpoint
+
+### devnet spawn-rpc
+
+Spawn a DevNet RPC endpoint.
+
+```bash
+tenderly devnet spawn-rpc [flags]
+```
+
+**Description:** Create a JSON-RPC endpoint for your DevNet.
+
+<Accordion title="Flags">
+  <ParamField path="--account" type="string">
+    The Tenderly account username or organization slug. If not provided, reads from `tenderly.yaml`
+  </ParamField>
+  
+  <ParamField path="--project" type="string">
+    The DevNet project slug. If not provided, reads from `tenderly.yaml`
+  </ParamField>
+  
+  <ParamField path="--template" type="string" required>
+    The DevNet template slug to apply when spawning the DevNet RPC
+  </ParamField>
+  
+  <ParamField path="--access_key" type="string">
+    The Tenderly access key. If not provided, reads from config
+  </ParamField>
+  
+  <ParamField path="--token" type="string">
+    The Tenderly JWT token. If not provided, reads from config
+  </ParamField>
+  
+  <ParamField path="--return-url" type="boolean" default="false">
+    Return the URL instead of printing it
+  </ParamField>
+</Accordion>
+
+---
+
+## Utility Commands
+
+### version
+
+Display the Tenderly CLI version.
+
+```bash
+tenderly version
+```
+
+**Description:** Shows the current CLI version and provides information for reporting bugs.
+
+### export (Deprecated)
+
+The export feature has been deprecated.
+
+```bash
+tenderly export
+```
+
+**Description:** This feature has been replaced by DevNets. Use DevNets for development node infrastructure.
+
+---
+
+## Legacy Commands
+
+<Warning>
+  The following commands are deprecated. Use the new `contracts` subcommands instead.
+</Warning>
+
+### push (Deprecated)
+
+```bash
+tenderly push [flags]
+```
+
+**Replacement:** Use `tenderly contracts push` instead.
+
+### verify (Deprecated)
+
+```bash
+tenderly verify [flags]
+```
+
+**Replacement:** Use `tenderly contracts verify` instead.

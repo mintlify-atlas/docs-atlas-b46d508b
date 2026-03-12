@@ -1,0 +1,286 @@
+---
+title: Installation
+description: Install the Tenderly CLI on macOS, Linux, or Windows
+---
+
+## System Requirements
+
+The Tenderly CLI is a single binary with no additional dependencies. It works on:
+
+- macOS (Intel and Apple Silicon)
+- Linux (x86_64)
+- Windows (x86_64)
+
+## Installation Methods
+
+<Tabs>
+  <Tab title="macOS">
+    ### Using Homebrew (Recommended)
+
+    The easiest way to install on macOS is via [Homebrew](https://brew.sh/):
+
+    ```bash
+    brew tap tenderly/tenderly
+    brew install tenderly
+    ```
+
+    <Tip>
+      Homebrew makes it easy to keep the CLI up to date with `brew upgrade tenderly`
+    </Tip>
+
+    ### Using Installation Script
+
+    Alternatively, you can install using our installation script:
+
+    ```bash
+    curl https://raw.githubusercontent.com/Tenderly/tenderly-cli/master/scripts/install-macos.sh | sh
+    ```
+
+    The script will:
+    - Download the latest version for your architecture
+    - Install the binary to `/usr/local/bin/tenderly`
+    - Make the binary executable
+
+    <Note>
+      You may need to grant terminal permissions in System Preferences for the installation to complete.
+    </Note>
+  </Tab>
+  <Tab title="Linux">
+    ### Using Installation Script
+
+    Install using our installation script with `root` privileges:
+
+    ```bash
+    curl https://raw.githubusercontent.com/Tenderly/tenderly-cli/master/scripts/install-linux.sh | sh
+    ```
+
+    Or if you're using a `sudo` user:
+
+    ```bash
+    curl https://raw.githubusercontent.com/Tenderly/tenderly-cli/master/scripts/install-linux.sh | sudo sh
+    ```
+
+    The script will:
+    - Detect your system architecture
+    - Download the appropriate binary
+    - Install to `/usr/local/bin/tenderly`
+    - Set proper permissions
+
+    <Warning>
+      Make sure `/usr/local/bin` is in your `$PATH`. You can verify this by running `echo $PATH`.
+    </Warning>
+  </Tab>
+  <Tab title="Windows">
+    ### Manual Installation
+
+    <Steps>
+      <Step title="Download the Binary">
+        Go to the [GitHub releases page](https://github.com/Tenderly/tenderly-cli/releases) and download the latest Windows binary (`.exe` file).
+      </Step>
+      <Step title="Add to PATH">
+        Move the downloaded `tenderly.exe` file to a directory that's in your system's `PATH`. Common locations include:
+        - `C:\Windows\System32`
+        - `C:\Program Files\Tenderly`
+        - A custom directory added to your PATH
+
+        To add a custom directory to PATH:
+        1. Open System Properties → Advanced → Environment Variables
+        2. Edit the `Path` variable under User or System variables
+        3. Add the directory containing `tenderly.exe`
+        4. Click OK to save
+      </Step>
+      <Step title="Verify Installation">
+        Open a new Command Prompt or PowerShell window and run:
+        ```bash
+        tenderly version
+        ```
+      </Step>
+    </Steps>
+
+    <Info>
+      Windows users may need to restart their terminal or IDE after installation for PATH changes to take effect.
+    </Info>
+  </Tab>
+</Tabs>
+
+## Verify Installation
+
+After installation, verify that the CLI is working correctly:
+
+```bash
+tenderly version
+```
+
+You should see output similar to:
+
+```text
+Current CLI version: v2.0.0
+
+To report a bug or give feedback send us an email at support@tenderly.co
+```
+
+## Updating the CLI
+
+### Check Current Version
+
+To check which version you're currently running:
+
+```bash
+tenderly version
+```
+
+### Update via Homebrew (macOS)
+
+If you installed via Homebrew, update with:
+
+```bash
+brew upgrade tenderly
+```
+
+### Update via Installation Script
+
+For installations via the curl script, simply run the installation command again:
+
+<CodeGroup>
+```bash macOS
+curl https://raw.githubusercontent.com/Tenderly/tenderly-cli/master/scripts/install-macos.sh | sh
+```
+
+```bash Linux
+curl https://raw.githubusercontent.com/Tenderly/tenderly-cli/master/scripts/install-linux.sh | sh
+```
+</CodeGroup>
+
+The script will replace your existing installation with the latest version.
+
+### Update on Windows
+
+For Windows installations:
+
+1. Download the latest version from the [releases page](https://github.com/Tenderly/tenderly-cli/releases)
+2. Replace your existing `tenderly.exe` file with the new one
+3. Verify the update with `tenderly version`
+
+### Check for Updates
+
+The CLI can automatically check for updates:
+
+```bash
+tenderly update-check
+```
+
+This command will:
+- Check if a newer version is available
+- Provide update instructions for your platform
+- Show changelog information
+
+<Tip>
+  The CLI automatically checks for updates periodically and will notify you if a new version is available. Keep your CLI up to date to get the latest features and bug fixes.
+</Tip>
+
+## Troubleshooting
+
+### Command Not Found
+
+If you get a "command not found" error after installation:
+
+<Steps>
+  <Step title="Check PATH">
+    Verify that the installation directory is in your PATH:
+    ```bash
+    echo $PATH
+    ```
+    Look for `/usr/local/bin` (macOS/Linux) or your Windows installation directory.
+  </Step>
+  <Step title="Restart Terminal">
+    Close and reopen your terminal or IDE to reload environment variables.
+  </Step>
+  <Step title="Verify Binary Location">
+    Check if the binary exists:
+    ```bash
+    # macOS/Linux
+    ls -la /usr/local/bin/tenderly
+    
+    # Windows (PowerShell)
+    Get-Command tenderly
+    ```
+  </Step>
+  <Step title="Manual PATH Update">
+    If needed, manually add the directory to your PATH:
+    ```bash
+    # Bash (add to ~/.bashrc or ~/.bash_profile)
+    export PATH="$PATH:/usr/local/bin"
+    
+    # Zsh (add to ~/.zshrc)
+    export PATH="$PATH:/usr/local/bin"
+    ```
+  </Step>
+</Steps>
+
+### Permission Denied (macOS/Linux)
+
+If you get a permission denied error:
+
+```bash
+sudo chmod +x /usr/local/bin/tenderly
+```
+
+### Installation Script Fails
+
+If the installation script fails:
+
+1. Try running with `sudo` (Linux only)
+2. Manually download the binary from the [releases page](https://github.com/Tenderly/tenderly-cli/releases)
+3. Move it to `/usr/local/bin` and make it executable:
+   ```bash
+   chmod +x tenderly
+   sudo mv tenderly /usr/local/bin/
+   ```
+
+### Antivirus Warnings (Windows)
+
+Some antivirus software may flag the Tenderly CLI. This is a false positive. You can:
+
+1. Add an exception for `tenderly.exe` in your antivirus settings
+2. Download from the official [GitHub releases page](https://github.com/Tenderly/tenderly-cli/releases)
+3. Verify the binary's checksum against the published values
+
+## Uninstalling
+
+### macOS (Homebrew)
+
+```bash
+brew uninstall tenderly
+brew untap tenderly/tenderly
+```
+
+### macOS/Linux (Script Installation)
+
+```bash
+sudo rm /usr/local/bin/tenderly
+```
+
+Optionally remove configuration files:
+
+```bash
+rm -rf ~/.tenderly
+```
+
+### Windows
+
+1. Delete the `tenderly.exe` file from your PATH directory
+2. Remove the directory from your PATH environment variable (if you created a custom directory)
+3. Optionally delete the configuration directory (typically in `%USERPROFILE%\.tenderly`)
+
+## Next Steps
+
+Now that you have the CLI installed, you're ready to:
+
+<CardGroup cols={2}>
+  <Card title="Quickstart Guide" icon="rocket" href="/quickstart">
+    Follow our quickstart to push your first contract
+  </Card>
+  <Card title="Authentication" icon="key" href="/commands/login">
+    Learn about login methods and authentication
+  </Card>
+</CardGroup>

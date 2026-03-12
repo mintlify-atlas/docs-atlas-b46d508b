@@ -1,0 +1,254 @@
+---
+title: "tenderly whoami"
+description: "Display information about the currently authenticated account"
+---
+
+The `tenderly whoami` command displays information about your currently authenticated Tenderly account, helping you verify your login status and account details.
+
+## Usage
+
+```bash
+tenderly whoami
+```
+
+This command has no flags or arguments.
+
+## Prerequisites
+
+<Note>
+  You must be logged in to use this command. Run `tenderly login` if you haven't authenticated yet.
+</Note>
+
+## Output
+
+The command displays different information depending on your account type:
+
+### User Account
+
+```bash
+tenderly whoami
+```
+
+**Example Output:**
+```
+ID: 550e8400-e29b-41d4-a716-446655440000
+Email: developer@example.com
+Username: dev-user
+```
+
+### Organization Account
+
+```bash
+tenderly whoami
+```
+
+**Example Output:**
+```
+ID: 6ba7b810-9dad-11d1-80b4-00c04fd430c8
+Organization name: MyCompany
+Username: mycompany
+```
+
+## Information Displayed
+
+<ParamField path="ID" type="string">
+  Your unique Tenderly account identifier.
+  
+  This ID is used internally to reference your account in API calls and configurations.
+</ParamField>
+
+<ParamField path="Email" type="string">
+  Your account email address.
+  
+  **Displayed for:** User accounts only (not organization accounts)
+</ParamField>
+
+<ParamField path="Organization name" type="string">
+  The name of your organization.
+  
+  **Displayed for:** Organization accounts only (not user accounts)
+</ParamField>
+
+<ParamField path="Username" type="string">
+  Your Tenderly username.
+  
+  This may be empty for some legacy accounts. Both user and organization accounts can have usernames.
+</ParamField>
+
+## Examples
+
+### Check Current Login Status
+
+```bash
+tenderly whoami
+```
+
+**Output (User Account):**
+```
+ID: abc123-def456-ghi789
+Email: alice@blockchain-company.com
+Username: alice
+```
+
+### Verify Organization Login
+
+```bash
+tenderly whoami
+```
+
+**Output (Organization Account):**
+```
+ID: org-uuid-12345
+Organization name: BlockchainCorp
+Username: blockchain-corp
+```
+
+## Use Cases
+
+### Verify Authentication
+
+After logging in, confirm your session:
+
+```bash
+tenderly login
+tenderly whoami
+```
+
+### Check Active Account
+
+When working with multiple accounts, verify which one is active:
+
+```bash
+tenderly whoami
+```
+
+### Debugging Configuration Issues
+
+If commands fail, verify your authentication status:
+
+```bash
+tenderly whoami
+```
+
+If you see an error, you may need to log in again.
+
+### CI/CD Pipeline Verification
+
+In automated environments, verify the service account:
+
+```bash
+#!/bin/bash
+echo "Authenticating with Tenderly..."
+tenderly login --authentication-method access-key --access-key $TENDERLY_ACCESS_KEY
+
+echo "Verifying authentication..."
+tenderly whoami
+```
+
+## Behavior
+
+<Steps>
+
+<Step title="Check Login Status">
+  The command first verifies you're logged in. If not authenticated, you'll be prompted to run `tenderly login`.
+</Step>
+
+<Step title="Fetch Principal Information">
+  Makes an API call to retrieve your account details from Tenderly.
+</Step>
+
+<Step title="Display Account Details">
+  Outputs your account information formatted based on account type:
+  - Always shows: ID
+  - User accounts: Email
+  - Organization accounts: Organization name
+  - If available: Username
+</Step>
+
+</Steps>
+
+## Error Scenarios
+
+### Not Logged In
+
+```
+You need to be logged in to use this command. Please run 'tenderly login' first.
+```
+
+**Solution:** Authenticate with `tenderly login`
+
+### Failed to Fetch User Information
+
+```
+Failed fetching user information. This can happen if you are running an older version of the Tenderly CLI.
+```
+
+**Possible causes:**
+- Outdated CLI version
+- Network connectivity issues
+- Invalid or expired access key
+- API service disruption
+
+**Solution:** 
+1. Update the CLI: `tenderly update`
+2. Re-authenticate: `tenderly login --force`
+3. Check network connectivity
+
+### Invalid Access Key
+
+If your access key has been revoked or expired:
+
+```
+Failed fetching user information.
+```
+
+**Solution:** Re-authenticate with a valid access key:
+```bash
+tenderly login --force --authentication-method access-key --access-key NEW_KEY
+```
+
+## Account Types
+
+Tenderly supports two principal types:
+
+### User Principal
+
+- **Type**: Individual user account
+- **Shows**: Email address
+- **Use case**: Personal development, individual projects
+
+### Organization Principal
+
+- **Type**: Organization/team account
+- **Shows**: Organization name
+- **Use case**: Team collaboration, shared projects
+
+<Note>
+  When logged in with an organization account, projects may be shared across team members. The organization name is used when referencing shared projects.
+</Note>
+
+## Programmatic Usage
+
+For scripts that need to extract account information:
+
+```bash
+#!/bin/bash
+
+# Capture whoami output
+ACCOUNT_INFO=$(tenderly whoami 2>&1)
+
+# Check if logged in
+if echo "$ACCOUNT_INFO" | grep -q "not logged in"; then
+    echo "Not authenticated. Logging in..."
+    tenderly login
+else
+    echo "Already authenticated:"
+    echo "$ACCOUNT_INFO"
+fi
+```
+
+## Related Commands
+
+- `tenderly login` - Authenticate with Tenderly
+- `tenderly logout` - Log out of your current session
+- `tenderly init` - Initialize a project (requires authentication)

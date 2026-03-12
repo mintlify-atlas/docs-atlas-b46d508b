@@ -1,0 +1,183 @@
+---
+title: "Node Extensions Overview"
+description: "Build custom RPC endpoints for your dapps with Node Extensions"
+---
+
+## What are Node Extensions?
+
+Node Extensions allow you to create custom JSON-RPC endpoints for your decentralized applications. Backed by Web3 Actions, you can define your own RPC methods to fit your specific needs, extending the standard Ethereum JSON-RPC interface with custom functionality.
+
+<Note>
+Node Extensions are built on top of Web3 Actions and require a gateway to be configured for your project.
+</Note>
+
+## Key Concepts
+
+### Custom RPC Methods
+
+Node Extensions enable you to create custom RPC methods that can be called from your dapp just like standard Ethereum methods (`eth_getBalance`, `eth_sendTransaction`, etc.). Your custom methods must follow a specific naming convention starting with `extension_`.
+
+### Web3 Actions Integration
+
+Each extension is powered by a Web3 Action with a non-authenticated webhook trigger. When your custom RPC method is called, it triggers the associated action, allowing you to execute custom logic, interact with smart contracts, or process blockchain data in unique ways.
+
+### Extension Components
+
+An extension consists of:
+
+- **Name**: A unique identifier for your extension
+- **Description**: Human-readable description of what the extension does
+- **Method Name**: The JSON-RPC method name (must start with `extension_`)
+- **Action**: The Web3 Action that executes when the method is called
+
+## Method Name Requirements
+
+Extension method names must follow strict validation rules:
+
+<ParamField path="methodName" type="string" required>
+  Must match the regex pattern: `^extension_[a-z][A-Za-z0-9]{2,}(?:[A-Z][a-z0-9]+)*$`
+  
+  **Valid examples:**
+  - `extension_getCustomBalance`
+  - `extension_validateTransaction`
+  - `extension_myCustomMethod`
+  
+  **Invalid examples:**
+  - `myMethod` (doesn't start with `extension_`)
+  - `extension_A` (too short, needs at least 3 characters after prefix)
+  - `extension_123` (must start with lowercase letter after prefix)
+  - `extension_my_method` (no underscores allowed after prefix)
+</ParamField>
+
+## Action Requirements
+
+To be used with an extension, a Web3 Action must:
+
+1. Have a **webhook trigger** configured
+2. The webhook trigger must be **non-authenticated** (`authenticated: false`)
+3. Not be currently used by another extension in the same project
+
+<Warning>
+Each action can only be associated with one extension. If you need multiple extensions, create multiple actions.
+</Warning>
+
+## Configuration
+
+Extensions are configured in your `tenderly.yaml` file under the `node_extensions` section:
+
+```yaml tenderly.yaml
+project_slug: my-project
+
+actions:
+  my-account/my-project:
+    - name: custom-balance-action
+      description: Calculate custom balance
+      function: actions/customBalance.ts
+      trigger:
+        type: webhook
+        webhook:
+          authenticated: false
+
+node_extensions:
+  my-account/my-project:
+    specs:
+      custom-balance:
+        description: Get custom balance calculation
+        method: extension_getCustomBalance
+        action: custom-balance-action
+```
+
+## Available Commands
+
+<CardGroup cols={2}>
+  <Card
+    title="Initialize Extension"
+    icon="wand-magic-sparkles"
+    href="/commands/extensions/init"
+  >
+    Set up a new node extension in your project
+  </Card>
+  <Card
+    title="Deploy Extension"
+    icon="rocket"
+    href="/commands/extensions/deploy"
+  >
+    Deploy extensions to your Tenderly gateway
+  </Card>
+</CardGroup>
+
+## Getting Started
+
+<Steps>
+  <Step title="Create a Web3 Action">
+    First, create a Web3 Action with a non-authenticated webhook trigger in your `tenderly.yaml`:
+    
+    ```yaml
+    actions:
+      my-account/my-project:
+        - name: my-extension-action
+          description: My custom extension logic
+          function: actions/myExtension.ts
+          trigger:
+            type: webhook
+            webhook:
+              authenticated: false
+    ```
+  </Step>
+  
+  <Step title="Initialize the Extension">
+    Run the init command to configure your extension:
+    
+    ```bash
+    tenderly node-extensions init \
+      --name my-custom-method \
+      --description "My custom RPC method" \
+      --methodName extension_myMethod
+    ```
+  </Step>
+  
+  <Step title="Deploy the Extension">
+    Deploy your extension to make it available via your gateway:
+    
+    ```bash
+    tenderly node-extensions deploy
+    ```
+  </Step>
+  
+  <Step title="Use Your Custom RPC Method">
+    Call your custom method from your dapp:
+    
+    ```javascript
+    const result = await provider.send('extension_myMethod', [params]);
+    ```
+  </Step>
+</Steps>
+
+## Use Cases
+
+Node Extensions are perfect for:
+
+- **Custom data aggregation**: Combine multiple contract calls into a single RPC method
+- **Advanced filtering**: Implement complex filtering logic for events or transactions
+- **Caching layers**: Build custom caching strategies for frequently accessed data
+- **Business logic**: Encode domain-specific logic directly into your RPC interface
+- **Data transformations**: Process and transform blockchain data before returning to clients
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Learn About Web3 Actions"
+    icon="bolt"
+    href="/commands/actions/overview"
+  >
+    Understand the underlying action system
+  </Card>
+  <Card
+    title="Gateway Configuration"
+    icon="network-wired"
+    href="/configuration/tenderly-yaml"
+  >
+    Configure gateways for your extensions
+  </Card>
+</CardGroup>

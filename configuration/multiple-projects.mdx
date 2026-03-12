@@ -1,0 +1,473 @@
+---
+title: "Multiple Projects Configuration"
+description: "Configure and manage multiple Tenderly projects from a single codebase"
+icon: "folder-tree"
+---
+
+The Tenderly CLI supports pushing smart contracts to multiple projects simultaneously. This is useful for managing contracts across different environments, teams, or organizations.
+
+## Overview
+
+Instead of specifying a single `project_slug`, you can define multiple projects in your `tenderly.yaml` file with individual network configurations for each project.
+
+## Basic Multi-Project Setup
+
+To configure multiple projects, replace the `project_slug` field with a `projects` field:
+
+<CodeGroup>
+```yaml Before (Single Project)
+account_id: "your-account-id"
+project_slug: "my-project"
+provider: "hardhat"
+```
+
+```yaml After (Multiple Projects)
+account_id: "your-account-id"
+provider: "hardhat"
+projects:
+  my-cool-project:
+    networks:
+      - "1"
+      - "5"
+  my-other-project:
+    networks:
+      - "137"
+```
+</CodeGroup>
+
+<Note>
+  When using the `projects` field, remove the `project_slug` field. You cannot use both simultaneously.
+</Note>
+
+## Project Configuration Structure
+
+```yaml
+projects:
+  project-name:
+    networks:
+      - "network-id-1"
+      - "network-id-2"
+```
+
+<ParamField path="projects" type="object" required>
+  A map of project slugs to their configurations.
+</ParamField>
+
+<ParamField path="projects.{project-slug}" type="object">
+  Configuration for a specific project.
+</ParamField>
+
+<ParamField path="projects.{project-slug}.networks" type="array">
+  Array of network IDs (as strings) to push to this project. If omitted or empty, contracts will be pushed to all migrated networks.
+</ParamField>
+
+## Network Filtering
+
+You can control which networks are pushed to each project:
+
+### Push to Specific Networks
+
+```yaml
+projects:
+  mainnet-project:
+    networks:
+      - "1"    # Ethereum Mainnet only
+  testnet-project:
+    networks:
+      - "5"    # Goerli
+      - "11155111"  # Sepolia
+```
+
+### Push to All Networks
+
+If you don't specify networks, contracts will be pushed to all networks where they're deployed:
+
+```yaml
+projects:
+  all-networks-project:
+    # No networks specified = push to all migrated networks
+  another-project:
+    networks: []  # Empty array also means all networks
+```
+
+## Organization and Shared Projects
+
+For projects owned by an organization or shared with you, use the full project identifier:
+
+```yaml
+projects:
+  company-account/shared-project:
+    networks:
+      - "1"
+      - "137"
+  personal-project:
+    networks:
+      - "5"
+```
+
+The project identifier format is: `organization-username/project-slug`
+
+<Note>
+  You can find the full project identifier in your Tenderly Dashboard under the project name.
+</Note>
+
+## Pushing to Multiple Projects
+
+When you run `tenderly push` with multiple projects configured, the CLI will:
+
+1. Analyze your smart contracts
+2. Push to each project sequentially
+3. Report success or failure for each project individually
+
+```bash
+tenderly push
+```
+
+Output example:
+
+```
+Pushing Smart Contracts for project: my-cool-project
+✓ Successfully pushed Smart Contracts for project my-cool-project
+
+Pushing Smart Contracts for project: my-other-project
+✓ Successfully pushed Smart Contracts for project my-other-project
+```
+
+## Pushing to a Single Project
+
+Even with multiple projects configured, you can push to just one using the `--project-slug` flag:
+
+```bash
+tenderly push --project-slug my-cool-project
+```
+
+This is useful when you want to:
+- Test a specific project configuration
+- Deploy to one environment at a time
+- Handle different deployment schedules
+
+## Network Specification
+
+You can also filter networks using the `--networks` flag:
+
+```bash
+# Push only mainnet contracts to all configured projects
+tenderly push --networks 1
+
+# Push to multiple specific networks
+tenderly push --networks "1,5,137"
+```
+
+The `--networks` flag works alongside the project-specific network configuration:
+- CLI flag networks are **added to** project-specific networks
+- Duplicates are automatically handled
+
+## Common Network IDs
+
+| Network | Chain ID |
+|---------|----------|
+| Ethereum Mainnet | "1" |
+| Goerli | "5" |
+| Sepolia | "11155111" |
+| Polygon | "137" |
+| Polygon Mumbai | "80001" |
+| Optimism | "10" |
+| Optimism Goerli | "420" |
+| Arbitrum One | "42161" |
+| Arbitrum Goerli | "421613" |
+| Base | "8453" |
+| Base Goerli | "84531" |
+| Avalanche | "43114" |
+| Avalanche Fuji | "43113" |
+| BNB Smart Chain | "56" |
+| BNB Testnet | "97" |
+
+## Complete Examples
+
+<Accordion title="Multi-Environment Setup">
+```yaml
+account_id: "abc123"
+provider: "hardhat"
+projects:
+  production:
+    networks:
+      - "1"      # Ethereum Mainnet
+      - "137"    # Polygon
+      - "10"     # Optimism
+  staging:
+    networks:
+      - "5"      # Goerli
+      - "80001"  # Mumbai
+  development:
+    # Push to all networks for dev environment
+```
+
+Usage:
+```bash
+# Deploy to all environments
+tenderly push
+
+# Deploy only to staging
+tenderly push --project-slug staging
+
+# Deploy mainnet only to production
+tenderly push --project-slug production --networks 1
+```
+</Accordion>
+
+<Accordion title="Team-Based Configuration">
+```yaml
+account_id: "abc123"
+provider: "hardhat"
+projects:
+  frontend-team/dapp-contracts:
+    networks:
+      - "1"    # Frontend team monitors mainnet
+  backend-team/api-contracts:
+    networks:
+      - "1"    # Backend team monitors mainnet
+  qa-team/test-contracts:
+    networks:
+      - "5"    # QA team tests on Goerli
+      - "11155111"  # And Sepolia
+```
+</Accordion>
+
+<Accordion title="Multi-Chain DApp">
+```yaml
+account_id: "abc123"
+provider: "hardhat"
+projects:
+  ethereum-contracts:
+    networks:
+      - "1"    # Mainnet
+      - "5"    # Goerli
+  layer2-contracts:
+    networks:
+      - "10"     # Optimism
+      - "42161"  # Arbitrum
+      - "8453"   # Base
+  sidechain-contracts:
+    networks:
+      - "137"    # Polygon
+      - "43114"  # Avalanche
+```
+</Accordion>
+
+## Error Handling
+
+When pushing to multiple projects, the CLI handles errors gracefully:
+
+```
+Pushing Smart Contracts for project: project-1
+✓ Successfully pushed Smart Contracts for project project-1
+
+Pushing Smart Contracts for project: project-2
+✗ Push for project-2 failed with error: No contracts found
+
+Pushing Smart Contracts for project: project-3
+✓ Successfully pushed Smart Contracts for project project-3
+```
+
+- The CLI will attempt to push to all projects, even if one fails
+- Each project's result is reported individually
+- The command exits with an error code if any push fails
+
+## Migration from Single Project
+
+To migrate from a single project configuration to multiple projects:
+
+1. **Back up your current configuration:**
+
+```bash
+cp tenderly.yaml tenderly.yaml.backup
+```
+
+2. **Update your `tenderly.yaml`:**
+
+```yaml
+# Remove this:
+# project_slug: "my-project"
+
+# Add this:
+projects:
+  my-project:
+    networks:
+      - "1"
+  my-new-project:
+    networks:
+      - "5"
+```
+
+3. **Test the configuration:**
+
+```bash
+# Test push to one project first
+tenderly push --project-slug my-project
+
+# Then push to all
+tenderly push
+```
+
+## Automation and CI/CD
+
+### Push to Different Projects per Branch
+
+```bash
+#!/bin/bash
+# deploy.sh
+
+BRANCH=$(git branch --show-current)
+
+if [ "$BRANCH" = "main" ]; then
+  echo "Deploying to production"
+  tenderly push --project-slug production
+elif [ "$BRANCH" = "staging" ]; then
+  echo "Deploying to staging"
+  tenderly push --project-slug staging
+else
+  echo "Deploying to development"
+  tenderly push --project-slug development
+fi
+```
+
+### GitHub Actions Example
+
+```yaml
+name: Deploy Contracts
+
+on:
+  push:
+    branches: [main, staging, dev]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Tenderly CLI
+        run: |
+          curl https://raw.githubusercontent.com/Tenderly/tenderly-cli/master/scripts/install-linux.sh | sh
+      
+      - name: Deploy to Tenderly
+        env:
+          TENDERLY_ACCESS_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
+        run: |
+          tenderly login --authentication-method access-key --access-key $TENDERLY_ACCESS_KEY
+          
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            tenderly push --project-slug production
+          elif [ "${{ github.ref }}" = "refs/heads/staging" ]; then
+            tenderly push --project-slug staging
+          else
+            tenderly push --project-slug development
+          fi
+```
+
+## Best Practices
+
+<Accordion title="Organize by Environment">
+**Do:**
+```yaml
+projects:
+  production:
+    networks: ["1", "137"]
+  staging:
+    networks: ["5", "80001"]
+  development:
+    networks: ["31337"]  # Hardhat network
+```
+
+This makes it clear which project corresponds to which environment.
+</Accordion>
+
+<Accordion title="Use Descriptive Project Names">
+**Do:**
+```yaml
+projects:
+  mainnet-dex-contracts:
+    networks: ["1"]
+  testnet-dex-contracts:
+    networks: ["5"]
+```
+
+**Don't:**
+```yaml
+projects:
+  proj1:
+    networks: ["1"]
+  proj2:
+    networks: ["5"]
+```
+</Accordion>
+
+<Accordion title="Document Network Choices">
+Add comments to explain why certain networks are grouped together:
+
+```yaml
+projects:
+  # EVM-compatible L1 chains
+  layer1-contracts:
+    networks:
+      - "1"   # Ethereum
+      - "56"  # BSC
+  
+  # Optimistic rollups
+  layer2-optimistic:
+    networks:
+      - "10"  # Optimism
+      - "8453"  # Base
+```
+</Accordion>
+
+## Troubleshooting
+
+<Accordion title="Project not found error">
+**Error:** `Failed reading project configuration. Couldn't find project with slug: project-name`
+
+**Solution:**
+- Verify the project exists in your Tenderly Dashboard
+- Check for typos in the project slug
+- For shared projects, ensure you use the full identifier: `organization/project`
+- Verify you have access to the project
+</Accordion>
+
+<Accordion title="No contracts pushed to specific project">
+**Problem:** Some projects receive no contracts
+
+**Solution:**
+- Check that contracts are deployed to the networks specified for that project
+- Verify network IDs are correct and in string format
+- Use `--debug` flag to see detailed information:
+  ```bash
+  tenderly push --debug --project-slug problem-project
+  ```
+</Accordion>
+
+<Accordion title="Conflicting configurations">
+**Error:** Using both `project_slug` and `projects` fields
+
+**Solution:**
+```yaml
+# Wrong:
+project_slug: "my-project"
+projects:
+  other-project:
+    networks: ["1"]
+
+# Correct (choose one):
+projects:
+  my-project:
+    networks: ["1"]
+  other-project:
+    networks: ["5"]
+```
+</Accordion>
+
+## See Also
+
+- [tenderly.yaml Configuration](/configuration/tenderly-yaml) - Complete configuration reference
+- [Global Flags](/configuration/global-flags) - Command-line flags
+- [tenderly push](/api-reference/push) - Push command reference
+- [Tenderly Dashboard](https://dashboard.tenderly.co) - Manage your projects

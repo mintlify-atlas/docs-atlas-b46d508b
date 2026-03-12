@@ -1,0 +1,276 @@
+---
+title: "Global Flags"
+description: "Command-line flags available across all Tenderly CLI commands"
+icon: "flag"
+---
+
+Global flags can be used with any Tenderly CLI command to modify behavior, control output, and specify custom configuration paths.
+
+## Available Global Flags
+
+### --debug
+
+Enables debug-level logging for troubleshooting issues.
+
+<ParamField path="--debug" type="boolean" default="false">
+  Turns on debug level logging with detailed information about command execution.
+</ParamField>
+
+```bash
+tenderly push --debug
+```
+
+<Note>
+  Debug mode also enables caller information in logs to help identify where errors occur in the CLI source code.
+</Note>
+
+### --reset-provider
+
+Clears the deployment provider configuration.
+
+<ParamField path="--reset-provider" type="boolean" default="false">
+  Clears the set deployment provider. If not provided, the CLI will use the provider from `tenderly.yaml`.
+</ParamField>
+
+```bash
+tenderly push --reset-provider
+```
+
+This is useful when:
+- Switching between different framework providers
+- The provider was incorrectly detected
+- You want to force provider re-detection
+
+### --output
+
+Controls the output format of command results.
+
+<ParamField path="--output" type="string" default="text">
+  Specifies which output mode to use: `text` or `json`.
+</ParamField>
+
+<CodeGroup>
+```bash Text Output (Default)
+tenderly whoami --output text
+```
+
+```bash JSON Output
+tenderly whoami --output json
+```
+</CodeGroup>
+
+The JSON output mode is particularly useful for:
+- Scripting and automation
+- Parsing CLI output programmatically
+- CI/CD pipeline integration
+
+**Example JSON output:**
+
+```json
+{
+  "username": "john-doe",
+  "email": "john@example.com",
+  "account_id": "abc123"
+}
+```
+
+### --global-config
+
+Specifies a custom name for the global configuration file.
+
+<ParamField path="--global-config" type="string" default="config">
+  Global configuration file name (without the extension). The file is stored in `~/.tenderly/`.
+</ParamField>
+
+```bash
+tenderly login --global-config production-config
+```
+
+This looks for `~/.tenderly/production-config.yaml` instead of the default `~/.tenderly/config.yaml`.
+
+**Use cases:**
+- Managing multiple Tenderly accounts
+- Separating development and production credentials
+- Team-specific configurations
+
+### --project-config
+
+Specifies a custom name for the project configuration file.
+
+<ParamField path="--project-config" type="string" default="tenderly">
+  Project configuration file name (without the extension). The file is stored in your project directory.
+</ParamField>
+
+```bash
+tenderly push --project-config tenderly-staging
+```
+
+This looks for `tenderly-staging.yaml` instead of the default `tenderly.yaml`.
+
+**Use cases:**
+- Multiple deployment environments (staging, production)
+- Different project configurations for different branches
+- Testing configurations without modifying the main file
+
+### --project-dir
+
+Specifies the directory where your smart contract project resides.
+
+<ParamField path="--project-dir" type="string" default=".">
+  The directory in which your Truffle/Hardhat/etc project resides. Defaults to the current working directory.
+</ParamField>
+
+```bash
+tenderly push --project-dir /path/to/my/project
+```
+
+<Note>
+  Using `--project-dir` is preferred over running `cd` commands when working with projects in different directories.
+</Note>
+
+**Example with relative path:**
+
+```bash
+tenderly push --project-dir ../contracts
+```
+
+## Combining Flags
+
+You can combine multiple global flags in a single command:
+
+```bash
+tenderly push --debug --output json --project-dir /path/to/project
+```
+
+## Configuration Priority
+
+The Tenderly CLI uses the following priority order for configuration:
+
+1. **Command-line flags** (highest priority)
+2. **Project configuration** (`tenderly.yaml`)
+3. **Global configuration** (`~/.tenderly/config.yaml`)
+4. **Default values** (lowest priority)
+
+<Accordion title="Example: Configuration Priority">
+```bash
+# If tenderly.yaml has project_slug: "my-project"
+# But you run:
+tenderly push --project-slug other-project
+
+# The CLI will use "other-project" (flag takes priority)
+```
+</Accordion>
+
+## Global Configuration File
+
+The global configuration file is stored at `~/.tenderly/config.yaml` and contains:
+
+```yaml
+token: "your-auth-token"
+account_id: "your-account-id"
+username: "your-username"
+email: "your-email@example.com"
+```
+
+<Note>
+  The global configuration file is created automatically when you run `tenderly login`. Never commit this file to version control as it contains authentication credentials.
+</Note>
+
+## Examples
+
+<Accordion title="Debug a Failed Push">
+```bash
+tenderly push --debug --output json > debug-output.json
+```
+
+This captures detailed debug information in JSON format for analysis.
+</Accordion>
+
+<Accordion title="Push from a Different Directory">
+```bash
+# Instead of:
+cd /path/to/project && tenderly push
+
+# Use:
+tenderly push --project-dir /path/to/project
+```
+</Accordion>
+
+<Accordion title="Use Staging Configuration">
+```bash
+tenderly push \
+  --project-config tenderly-staging \
+  --project-dir ./contracts \
+  --debug
+```
+</Accordion>
+
+<Accordion title="Switch Between Multiple Accounts">
+```bash
+# Login with production account
+tenderly login --global-config prod-config
+
+# Login with development account
+tenderly login --global-config dev-config
+
+# Use production account for push
+tenderly push --global-config prod-config
+```
+</Accordion>
+
+## Environment Variables
+
+While the CLI primarily uses configuration files and flags, you can also set some behavior through environment variables:
+
+```bash
+# Set project directory via environment
+export TENDERLY_PROJECT_DIR=/path/to/project
+tenderly push
+```
+
+<Note>
+  Command-line flags always take precedence over environment variables.
+</Note>
+
+## Common Patterns
+
+### CI/CD Integration
+
+```bash
+#!/bin/bash
+# deploy.sh
+
+tenderly contracts push \
+  --output json \
+  --project-dir $CI_PROJECT_DIR \
+  --project-config tenderly-prod \
+  > deployment-result.json
+
+# Check if deployment was successful
+if [ $? -eq 0 ]; then
+  echo "Deployment successful"
+else
+  echo "Deployment failed"
+  cat deployment-result.json
+  exit 1
+fi
+```
+
+### Multiple Environment Management
+
+```bash
+# .bashrc or .zshrc aliases
+alias tenderly-dev='tenderly --global-config dev-config'
+alias tenderly-prod='tenderly --global-config prod-config'
+
+# Usage
+tenderly-dev push
+tenderly-prod push
+```
+
+## See Also
+
+- [tenderly.yaml Configuration](/configuration/tenderly-yaml) - Project configuration file reference
+- [Multiple Projects](/configuration/multiple-projects) - Configure multiple projects
+- [Login](/api-reference/login) - Authenticate with Tenderly
+- [Init](/api-reference/init) - Initialize a project

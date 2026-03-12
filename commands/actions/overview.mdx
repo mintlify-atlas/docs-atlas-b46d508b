@@ -1,0 +1,202 @@
+---
+title: "Actions Overview"
+description: "Create, build, and deploy Web3 Actions using the Tenderly CLI"
+---
+
+Web3 Actions are programmable hooks that run your code in response to on-chain (or off-chain) events, usually on your smart contracts. They enable you to automate workflows, monitor contract activity, and build reactive dApps.
+
+## What are Web3 Actions?
+
+Web3 Actions allow you to:
+- Execute custom code when specific blockchain events occur
+- Monitor smart contracts and respond to state changes
+- Automate workflows based on transaction patterns
+- Build event-driven applications
+- Integrate blockchain data with external services
+
+## Actions Workflow
+
+The typical workflow for working with Actions involves three main commands:
+
+<Steps>
+  <Step title="Initialize">
+    Set up a new Actions project with `tenderly actions init`. This creates the project structure, configuration files, and example code.
+  </Step>
+  <Step title="Build">
+    Validate and build your Actions with `tenderly actions build`. This compiles TypeScript, validates configurations, and checks for errors.
+  </Step>
+  <Step title="Publish or Deploy">
+    Use `tenderly actions publish` to publish Actions to the dashboard, or `tenderly actions deploy` to publish and deploy them with active triggers.
+  </Step>
+</Steps>
+
+## Quick Start
+
+```bash
+# Initialize a new Actions project
+tenderly actions init
+
+# Build your Actions
+tenderly actions build
+
+# Deploy your Actions
+tenderly actions deploy
+```
+
+## Action Components
+
+### Action Function
+
+Every Action consists of a function that receives context and event data:
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    import { ActionFn, Context, Event, BlockEvent } from '@tenderly/actions';
+
+    export const blockHelloWorldFn: ActionFn = async (context: Context, event: Event) => {
+      let blockEvent = event as BlockEvent;
+      console.log(blockEvent);
+    }
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const blockHelloWorldFn = async (context, event) => {
+      console.log(event);
+    }
+    module.exports = { blockHelloWorldFn };
+    ```
+  </Tab>
+</Tabs>
+
+### Action Specification
+
+Actions are configured in your `tenderly.yaml` file:
+
+```yaml
+actions:
+  your-project/slug:
+    runtime: v2
+    sources: actions
+    specs:
+      example:
+        description: "This is just an example, but you can publish this action."
+        function: example:blockHelloWorldFn
+        trigger:
+          type: block
+          block:
+            network:
+              - 1
+            blocks: 10
+        execution_type: parallel
+```
+
+## Trigger Types
+
+Actions support multiple trigger types:
+
+<CardGroup cols={2}>
+  <Card title="Block" icon="cube">
+    Trigger on new blocks with configurable frequency
+  </Card>
+  <Card title="Transaction" icon="receipt">
+    Monitor specific transactions or transaction patterns
+  </Card>
+  <Card title="Webhook" icon="webhook">
+    Trigger via HTTP webhook calls
+  </Card>
+  <Card title="Periodic" icon="clock">
+    Execute on a schedule using cron or intervals
+  </Card>
+  <Card title="Alert" icon="bell">
+    Respond to Tenderly Alert triggers
+  </Card>
+</CardGroup>
+
+## Execution Types
+
+Actions support two execution types:
+
+- **`parallel`**: Executes the action asynchronously (ASYNC invocation). Multiple instances can run simultaneously.
+- **`sequential`**: Executes the action synchronously (SYNC invocation). Only one instance runs at a time, subsequent triggers queue up.
+
+<Note>
+If `execution_type` is not specified, the action defaults to parallel execution.
+</Note>
+
+## Runtime Configuration
+
+Actions support two runtime versions:
+
+- **`v1`**: Legacy runtime (deprecated)
+- **`v2`**: Current runtime with improved performance and features (recommended)
+
+## Dependencies
+
+For TypeScript/JavaScript Actions, you must include the `@tenderly/actions` package:
+
+```json package.json
+{
+  "dependencies": {
+    "@tenderly/actions": "^0.2.0"
+  }
+}
+```
+
+The CLI automatically manages this dependency when you initialize a new project.
+
+## Project Structure
+
+A typical Actions project structure:
+
+```
+project/
+├── actions/               # Source directory (configurable)
+│   ├── example.ts         # Action functions
+│   ├── package.json       # Dependencies
+│   ├── tsconfig.json      # TypeScript config
+│   └── .gitignore
+├── tenderly.yaml          # Actions configuration
+└── out/                   # Compiled output (for TypeScript)
+```
+
+## Available Commands
+
+<CardGroup cols={2}>
+  <Card title="init" icon="rocket" href="/commands/actions/init">
+    Initialize a new Actions project
+  </Card>
+  <Card title="build" icon="hammer">
+    Build and validate Actions locally
+  </Card>
+  <Card title="publish" icon="upload" href="/commands/actions/publish">
+    Publish Actions to the dashboard
+  </Card>
+  <Card title="deploy" icon="circle-play">
+    Publish and deploy Actions with active triggers
+  </Card>
+</CardGroup>
+
+## Global Flags
+
+```bash
+--project string    The project slug in which the actions will be published & deployed
+```
+
+Use the `--project` flag to specify which project to use without being prompted:
+
+```bash
+tenderly actions deploy --project my-username/my-project
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Initialize Your First Action" icon="sparkles" href="/commands/actions/init">
+    Learn how to set up a new Actions project
+  </Card>
+  <Card title="Publish Your Actions" icon="rocket" href="/commands/actions/publish">
+    Deploy your Actions to production
+  </Card>
+</CardGroup>

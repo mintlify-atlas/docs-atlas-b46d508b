@@ -1,0 +1,118 @@
+---
+title: Introduction
+description: Welcome to the Tenderly CLI - a suite of development tools for monitoring, debugging, and verifying smart contracts
+---
+
+## What is Tenderly CLI?
+
+Tenderly CLI is a suite of development tools that allows you to debug, monitor, and track the execution of your smart contracts. Whether you're deploying to mainnet, testnets, or local development networks, Tenderly CLI provides the essential tooling to streamline your smart contract workflow.
+
+<CardGroup cols={2}>
+  <Card title="Contract Monitoring" icon="chart-line">
+    Actively monitor your deployed contracts on any supported network with real-time transaction tracking
+  </Card>
+  <Card title="Smart Debugging" icon="bug">
+    Debug transactions with detailed execution traces and state changes
+  </Card>
+  <Card title="Contract Verification" icon="circle-check">
+    Verify your contracts directly from your development environment
+  </Card>
+  <Card title="Multi-Framework Support" icon="layer-group">
+    Works with Hardhat, Truffle, Foundry, and other popular frameworks
+  </Card>
+</CardGroup>
+
+## Key Features
+
+### Contract Management
+
+Push your smart contracts to the Tenderly Dashboard where they're actively monitored. Get insights into every transaction, including:
+
+- Transaction traces and call stacks
+- State changes and event logs
+- Gas usage analytics
+- Error detection and debugging information
+
+### Multiple Authentication Methods
+
+Tenderly CLI supports flexible authentication:
+
+- **Email/Password**: Traditional authentication flow
+- **Access Key**: Generate an access key from your [Tenderly Dashboard](https://dashboard.tenderly.co/account/authorization) for CI/CD pipelines
+
+### Project Configuration
+
+The CLI uses a simple YAML configuration file (`tenderly.yaml`) to manage your project settings. You can push contracts to multiple projects and networks with a single configuration.
+
+### Global Flags
+
+Every command supports these global flags for customization:
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--debug` | false | Enable debug level logging for troubleshooting |
+| `--output` | text | Set output mode: `text` or `json` |
+| `--global-config` | config | Specify global configuration file name |
+| `--project-config` | tenderly | Specify project configuration file name |
+| `--project-dir` | ./ | Set the project directory path |
+
+## Use Cases
+
+<Tabs>
+  <Tab title="Development">
+    During development, use Tenderly CLI to:
+    - Verify contracts as you deploy them
+    - Monitor test deployments on testnets
+    - Debug failed transactions with detailed traces
+    - Track contract interactions and state changes
+  </Tab>
+  <Tab title="Production">
+    In production environments:
+    - Push contracts for active monitoring
+    - Set up alerts for critical transactions
+    - Analyze gas optimization opportunities
+    - Maintain visibility into contract execution
+  </Tab>
+  <Tab title="CI/CD">
+    Integrate into your pipelines:
+    - Automate contract verification on deployment
+    - Use access key authentication for seamless integration
+    - Push contracts across multiple networks
+    - Generate deployment reports in JSON format
+  </Tab>
+</Tabs>
+
+## Supported Networks
+
+Tenderly CLI supports all major Ethereum networks and EVM-compatible chains, including:
+
+- Ethereum Mainnet and all major testnets
+- Layer 2 solutions (Arbitrum, Optimism, Base, etc.)
+- Polygon, BSC, Avalanche, and more
+- Custom and local networks (via DevNets)
+
+<Info>
+  For smart contract verification with Foundry or Hardhat, refer to the [Foundry verification guide](https://docs.tenderly.co/contract-verification/foundry) and [Hardhat verification guide](https://docs.tenderly.co/contract-verification/hardhat).
+</Info>
+
+## What's Next?
+
+Ready to get started? Follow our [installation guide](/installation) to set up the Tenderly CLI on your system, then check out the [quickstart guide](/quickstart) to push your first contract to Tenderly.
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install the CLI on macOS, Linux, or Windows
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get started in 5 minutes with our quickstart guide
+  </Card>
+</CardGroup>
+
+## Get Help
+
+Need assistance? We're here to help:
+
+- Email us at [support@tenderly.co](mailto:support@tenderly.co)
+- Check the command-line help with `tenderly --help`
+- Use the `--debug` flag for detailed error information
+- Report bugs on the [GitHub repository](https://github.com/Tenderly/tenderly-cli)

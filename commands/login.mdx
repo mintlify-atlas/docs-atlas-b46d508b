@@ -1,0 +1,199 @@
+---
+title: "tenderly login"
+description: "Authenticate with your Tenderly account"
+---
+
+The `tenderly login` command authenticates you with your Tenderly account, allowing you to use CLI features that require authentication.
+
+## Usage
+
+```bash
+tenderly login [flags]
+```
+
+## Authentication Methods
+
+Tenderly CLI supports two authentication methods:
+
+1. **Email/Password** - Interactive login with your Tenderly credentials
+2. **Access Key** - Token-based authentication using a key from your dashboard
+
+### Interactive Login
+
+Run the command without flags for an interactive authentication flow:
+
+```bash
+tenderly login
+```
+
+You'll be prompted to:
+1. Select authentication method (Email or Access key)
+2. Enter your credentials
+
+### Non-Interactive Login
+
+<CodeGroup>
+
+```bash Email Authentication
+tenderly login \
+  --authentication-method email \
+  --email your-email@example.com \
+  --password your-password
+```
+
+```bash Access Key Authentication
+tenderly login \
+  --authentication-method access-key \
+  --access-key YOUR_ACCESS_KEY
+```
+
+</CodeGroup>
+
+## Flags
+
+<ParamField path="--email" type="string">
+  The email address associated with your Tenderly account.
+  
+  Used when `--authentication-method` is set to `email`.
+</ParamField>
+
+<ParamField path="--password" type="string">
+  The password for your Tenderly account.
+  
+  Used when `--authentication-method` is set to `email`.
+</ParamField>
+
+<ParamField path="--access-key" type="string">
+  The access key generated in your Tenderly dashboard.
+  
+  Generate an access key at: https://dashboard.tenderly.co/account/authorization
+</ParamField>
+
+<ParamField path="--authentication-method" type="string">
+  Specify the authentication method to use.
+  
+  **Possible values:**
+  - `email` - Authenticate using email and password
+  - `access-key` - Authenticate using an access key
+</ParamField>
+
+<ParamField path="--force" type="boolean" default="false">
+  Force login even if already authenticated.
+  
+  Use this flag to switch between different Tenderly accounts.
+</ParamField>
+
+## Examples
+
+### Interactive Login Flow
+
+```bash
+tenderly login
+```
+
+**Output:**
+```
+? Select authentication method:
+  ▸ Email
+    Access key can be generated at https://dashboard.tenderly.co/account/authorization
+```
+
+### Login with Email (Non-Interactive)
+
+```bash
+tenderly login \
+  --authentication-method email \
+  --email dev@example.com \
+  --password mypassword
+```
+
+### Login with Access Key
+
+```bash
+tenderly login --authentication-method access-key --access-key tnd_abc123xyz
+```
+
+**Output:**
+```
+Successfully authenticated with Tenderly
+```
+
+### Force Re-Login
+
+If you're already logged in and want to switch accounts:
+
+```bash
+tenderly login --force
+```
+
+## Behavior
+
+<Steps>
+
+<Step title="Check Existing Session">
+  The CLI first checks if you're already logged in. If authenticated, it displays:
+  
+  ```
+  It seems that you are already logged in with the account USERNAME.
+  If this is not you or you want to login with a different account rerun this command with the --force flag.
+  ```
+</Step>
+
+<Step title="Authentication">
+  Based on the selected method:
+  - **Email**: Makes a login request with your credentials (3 attempts allowed)
+  - **Access Key**: Validates the provided access key
+</Step>
+
+<Step title="Store Credentials">
+  Upon successful authentication, the CLI:
+  - Stores the access key in the global configuration
+  - Fetches and stores your principal information (user or organization)
+  - Saves account ID, email/organization name, and username
+</Step>
+
+<Step title="Configuration Saved">
+  Credentials are written to the global config file (`~/.tenderly/config.yaml`)
+</Step>
+
+</Steps>
+
+<Note>
+  After successful login, the CLI suggests running `tenderly init` if a project is detected in the current directory.
+</Note>
+
+<Warning>
+  When using `--authentication-method`, the value must be either `email` or `access-key`. Any other value will result in an error.
+</Warning>
+
+## Error Handling
+
+### Invalid Credentials
+
+If email/password authentication fails:
+```
+Couldn't make the login request. Please try again.
+```
+
+You have 3 attempts when using interactive mode.
+
+### Invalid Access Key
+
+If the access key is invalid:
+```
+Couldn't fetch user information. This can happen if your access key is not valid. Please try again.
+```
+
+### Unsupported Authentication Method
+
+```
+The --authentication-method can either be email or access-key
+```
+
+## Next Steps
+
+After logging in:
+
+1. **Initialize a project**: Run `tenderly init` in your project directory
+2. **Verify authentication**: Run `tenderly whoami` to check your login status
+3. **Start using CLI features**: Export transactions, push contracts, run simulations, etc.

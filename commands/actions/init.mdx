@@ -1,0 +1,359 @@
+---
+title: "tenderly actions init"
+description: "Initialize a new Web3 Actions project"
+---
+
+The `tenderly actions init` command guides you through setting up a new Actions project. It creates the source directory structure, generates configuration files, and provides example code to get you started quickly.
+
+## Usage
+
+```bash
+tenderly actions init [flags]
+```
+
+## What It Does
+
+When you run `tenderly actions init`, the command:
+
+<Steps>
+  <Step title="Authenticates">
+    Verifies you're logged in to Tenderly
+  </Step>
+  <Step title="Selects Project">
+    Prompts you to choose a project or uses the `--project` flag
+  </Step>
+  <Step title="Configures Language">
+    Sets up TypeScript or JavaScript based on your preference
+  </Step>
+  <Step title="Creates Structure">
+    Generates the source directory with example files
+  </Step>
+  <Step title="Installs Dependencies">
+    Runs `npm install` for TypeScript projects
+  </Step>
+  <Step title="Updates Config">
+    Adds Actions configuration to `tenderly.yaml`
+  </Step>
+</Steps>
+
+## Flags
+
+### `--sources`
+
+```bash
+--sources string    The path where the actions will be created
+```
+
+Specify a custom directory for your Actions source code. If not provided, the CLI will prompt you or use the default (`actions/` or `src/actions/`).
+
+**Example:**
+
+```bash
+tenderly actions init --sources ./my-actions
+```
+
+### `--language`
+
+```bash
+--language string    Initialize actions for this language (default "typescript")
+```
+
+Choose between TypeScript and JavaScript. Supported values:
+- `typescript` (default)
+- `javascript`
+
+**Example:**
+
+```bash
+tenderly actions init --language javascript
+```
+
+### `--template`
+
+```bash
+--template string    Initialize actions from this template
+```
+
+Bootstrap your project from a template in the `Tenderly/tenderly-actions` repository. This is useful for starting with pre-built examples.
+
+**Example:**
+
+```bash
+tenderly actions init --template basic-webhook
+```
+
+### `--project`
+
+```bash
+--project string    The project slug in which the actions will be published & deployed
+```
+
+Specify the project without being prompted. Format: `username/project-slug`
+
+**Example:**
+
+```bash
+tenderly actions init --project myusername/my-project
+```
+
+## Examples
+
+### Basic Initialization (TypeScript)
+
+```bash
+tenderly actions init
+```
+
+This will:
+1. Prompt you to select a project
+2. Prompt for the sources directory (default: `actions/`)
+3. Create TypeScript project structure
+4. Install dependencies
+
+### JavaScript Project
+
+```bash
+tenderly actions init --language javascript --sources ./src/actions
+```
+
+Creates a JavaScript-based Actions project in the `./src/actions` directory.
+
+### Using a Template
+
+```bash
+tenderly actions init --template webhook-example --project myusername/my-project
+```
+
+Initializes from a template without prompts.
+
+## Generated Files
+
+<Tabs>
+  <Tab title="TypeScript Project">
+    After running `tenderly actions init` for TypeScript, you'll get:
+
+    ```
+    actions/
+    ├── example.ts          # Example action function
+    ├── package.json        # Dependencies including @tenderly/actions
+    ├── tsconfig.json       # TypeScript configuration
+    ├── .gitignore          # Git ignore for node_modules and build output
+    └── node_modules/       # Installed dependencies
+    ```
+
+    ### example.ts
+
+    ```typescript
+    import {
+      ActionFn,
+      Context,
+      Event,
+      BlockEvent,
+    } from '@tenderly/actions';
+
+    export const blockHelloWorldFn: ActionFn = async (context: Context, event: Event) => {
+      let blockEvent = event as BlockEvent;
+      console.log(blockEvent);
+    }
+    ```
+
+    ### package.json
+
+    ```json
+    {
+      "name": "actions",
+      "version": "1.0.0",
+      "dependencies": {
+        "@tenderly/actions": "^0.2.0"
+      },
+      "scripts": {
+        "build": "tsc"
+      },
+      "devDependencies": {
+        "typescript": "^4.9.0"
+      }
+    }
+    ```
+
+    ### tsconfig.json
+
+    ```json
+    {
+      "compilerOptions": {
+        "target": "ES2020",
+        "module": "commonjs",
+        "outDir": "./out",
+        "rootDir": "./",
+        "strict": true,
+        "esModuleInterop": true
+      }
+    }
+    ```
+
+    ### .gitignore
+
+    ```
+    # Dependency directories
+    node_modules/
+
+    # Ignore tsc output
+    out/**/*
+    ```
+  </Tab>
+  <Tab title="JavaScript Project">
+    After running `tenderly actions init --language javascript`, you'll get:
+
+    ```
+    actions/
+    └── example.js          # Example action function
+    ```
+
+    ### example.js
+
+    ```javascript
+    const blockHelloWorldFn = async (context, event) => {
+      console.log(event);
+    }
+    module.exports = { blockHelloWorldFn };
+    ```
+
+    <Note>
+    JavaScript projects don't require `package.json`, `tsconfig.json`, or build steps unless you add additional dependencies.
+    </Note>
+  </Tab>
+</Tabs>
+
+## Configuration in tenderly.yaml
+
+The `init` command adds an Actions section to your `tenderly.yaml`:
+
+```yaml
+actions:
+  username/project-slug:
+    runtime: v2
+    sources: actions
+    specs:
+      example:
+        description: "This is just an example, but you can publish this action."
+        function: example:blockHelloWorldFn
+        trigger:
+          type: block
+          block:
+            network:
+              - 1
+            blocks: 10
+        execution_type: parallel
+```
+
+### Configuration Fields
+
+- **`runtime`**: Runtime version (`v1` or `v2`). Defaults to `v2`.
+- **`sources`**: Directory containing your Action source files.
+- **`specs`**: Map of action names to their specifications.
+  - **`description`**: Optional description of what the action does.
+  - **`function`**: Function locator in format `filename:functionName`.
+  - **`trigger`**: Trigger configuration (type and parameters).
+  - **`execution_type`**: `parallel` or `sequential`.
+
+## Function Locator Format
+
+The `function` field uses the format: `filename:functionName`
+
+- **`filename`**: Relative path to the file (without extension) from the sources directory
+- **`functionName`**: The exported function name
+
+**Examples:**
+
+```yaml
+function: example:blockHelloWorldFn        # File: example.ts/js
+function: handlers/blocks:onNewBlock       # File: handlers/blocks.ts/js
+function: utils/monitoring:checkBalance    # File: utils/monitoring.ts/js
+```
+
+## TypeScript Configuration
+
+<Note>
+For TypeScript projects, the `tsconfig.json` must have `compilerOptions.outDir` set. This tells the compiler where to output compiled JavaScript files.
+</Note>
+
+The CLI automatically:
+1. Detects parent `tsconfig.json` files
+2. Excludes the Actions directory from parent compilation
+3. Creates an isolated TypeScript environment for Actions
+
+This prevents conflicts with existing TypeScript projects.
+
+## Dependencies
+
+### @tenderly/actions
+
+The TypeScript/JavaScript runtime requires the `@tenderly/actions` package (version `^0.2.0` or later).
+
+```bash
+npm install @tenderly/actions
+```
+
+This package provides:
+- Type definitions for `ActionFn`, `Context`, `Event`
+- Event types: `BlockEvent`, `TransactionEvent`, `WebhookEvent`, etc.
+- Helper utilities for working with blockchain data
+
+## Error Handling
+
+### Already Initialized
+
+If you run `init` in a project that already has Actions configured:
+
+```
+Actions for project my-project are already initialized, see tenderly.yaml
+```
+
+Check your `tenderly.yaml` file to see the existing configuration.
+
+### Directory Exists
+
+If the specified sources directory already exists:
+
+```
+Selected sources directory already exists.
+```
+
+Choose a different directory name or remove the existing one.
+
+### Language Not Supported
+
+```
+Language python not supported
+```
+
+Only `typescript` and `javascript` are supported values for the `--language` flag.
+
+## Next Steps
+
+After initialization:
+
+<Steps>
+  <Step title="Customize Your Action">
+    Edit the generated action files to implement your logic
+  </Step>
+  <Step title="Configure Triggers">
+    Modify the trigger configuration in `tenderly.yaml` to match your needs
+  </Step>
+  <Step title="Build and Test">
+    Run `tenderly actions build` to validate your code
+  </Step>
+  <Step title="Deploy">
+    Use `tenderly actions deploy` to deploy your actions
+  </Step>
+</Steps>
+
+## See Also
+
+<CardGroup cols={2}>
+  <Card title="Actions Overview" icon="book" href="/commands/actions/overview">
+    Learn about Web3 Actions concepts
+  </Card>
+  <Card title="Publish Command" icon="upload" href="/commands/actions/publish">
+    Publish and deploy your Actions
+  </Card>
+</CardGroup>

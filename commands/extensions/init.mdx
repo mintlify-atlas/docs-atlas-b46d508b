@@ -1,0 +1,303 @@
+---
+title: "tenderly node-extensions init"
+description: "Initialize a new node extension in your project"
+---
+
+## Overview
+
+The `init` command guides you through setting up a new node extension in your project. It populates the `node_extensions` section in your `tenderly.yaml` file by linking a custom RPC method to an existing Web3 Action.
+
+```bash
+tenderly node-extensions init [flags]
+```
+
+<Note>
+You can also use the shorter alias: `tenderly extensions init`
+</Note>
+
+## Prerequisites
+
+Before initializing an extension, ensure you have:
+
+1. **Authenticated with Tenderly**
+   ```bash
+   tenderly login
+   ```
+
+2. **At least one eligible Web3 Action** configured in `tenderly.yaml` with:
+   - Trigger type: `webhook`
+   - Webhook authentication: `false`
+   - Not already used by another extension
+
+<Warning>
+The init command will fail if you don't have any eligible actions. Make sure to create a Web3 Action with a non-authenticated webhook trigger first.
+</Warning>
+
+## Flags
+
+<ParamField path="--name" type="string" required>
+  Name for the extension. This is a unique identifier used in your `tenderly.yaml` configuration.
+  
+  ```bash
+  --name my-custom-balance
+  ```
+</ParamField>
+
+<ParamField path="--description" type="string">
+  Human-readable description of what the extension does. Helps document the purpose of your custom RPC method.
+  
+  ```bash
+  --description "Calculate custom token balance with vesting"
+  ```
+</ParamField>
+
+<ParamField path="--methodName" type="string" required>
+  The JSON-RPC method name that will be used to call this extension. Must follow the naming convention.
+  
+  **Requirements:**
+  - Must start with `extension_`
+  - Followed by a lowercase letter
+  - At least 3 characters after the prefix
+  - Can contain letters and numbers
+  - Use camelCase (no underscores after the prefix)
+  - Must match regex: `^extension_[a-z][A-Za-z0-9]{2,}(?:[A-Z][a-z0-9]+)*$`
+  
+  ```bash
+  --methodName extension_getCustomBalance
+  ```
+</ParamField>
+
+## Interactive Mode
+
+When you run the init command, if multiple eligible actions are available, you'll be prompted to select which action to use with your extension:
+
+```bash
+$ tenderly node-extensions init --name my-extension --methodName extension_myMethod
+
+? Select action to use with extension:
+  ▸ my-account/my-project:custom-webhook-action
+    my-account/my-project:another-webhook-action
+```
+
+Use arrow keys to select the action, then press Enter.
+
+## Examples
+
+### Basic Initialization
+
+Initialize an extension with required flags:
+
+```bash
+tenderly node-extensions init \
+  --name token-balance \
+  --description "Get token balance with custom logic" \
+  --methodName extension_getTokenBalance
+```
+
+### Custom Data Aggregation
+
+Create an extension for aggregating data from multiple sources:
+
+```bash
+tenderly node-extensions init \
+  --name aggregate-portfolio \
+  --description "Aggregate portfolio data across multiple protocols" \
+  --methodName extension_getPortfolioValue
+```
+
+### Transaction Validation
+
+Set up an extension for custom transaction validation:
+
+```bash
+tenderly node-extensions init \
+  --name validate-tx \
+  --description "Validate transactions against custom rules" \
+  --methodName extension_validateTransaction
+```
+
+## Configuration Result
+
+After successful initialization, the command updates your `tenderly.yaml` file:
+
+```yaml tenderly.yaml
+node_extensions:
+  my-account/my-project:
+    specs:
+      token-balance:  # From --name flag
+        description: Get token balance with custom logic
+        method: extension_getTokenBalance  # From --methodName flag
+        action: custom-webhook-action      # Selected from prompt
+```
+
+## Validation and Errors
+
+The init command performs several validations:
+
+### Invalid Method Name
+
+If your method name doesn't match the required pattern:
+
+```bash
+$ tenderly node-extensions init --name test --methodName my_method
+
+Error initializing extensions: invalid method name: my_method
+Please make sure that your extension's method name satisfies the following regex:
+^extension_[a-z][A-Za-z0-9]{2,}(?:[A-Z][a-z0-9]+)*$
+```
+
+<Note>
+**Common mistakes:**
+- Not starting with `extension_`
+- Using underscores after the prefix
+- Starting with uppercase or number after prefix
+- Method name too short (less than 3 chars after prefix)
+</Note>
+
+### No Eligible Actions
+
+If no actions with non-authenticated webhook triggers exist:
+
+```bash
+Error initializing extensions: no actions found in tenderly.yaml that can be
+used to create a extension.
+Please make sure that you have at least one action in tenderly.yaml which has
+a non authenticated webhook trigger.
+```
+
+**Solution:** Add a Web3 Action with a webhook trigger:
+
+```yaml tenderly.yaml
+actions:
+  my-account/my-project:
+    - name: my-webhook-action
+      function: actions/myAction.ts
+      trigger:
+        type: webhook
+        webhook:
+          authenticated: false  # Required for extensions
+```
+
+### All Actions Already In Use
+
+If all eligible actions are already associated with extensions:
+
+```bash
+Error initializing extensions: all eligible actions are already used by
+extensions in tenderly.yaml
+Please make sure that you have at least one action in tenderly.yaml which has
+a non authenticated webhook trigger and isn't used by any extension.
+```
+
+**Solution:** Create a new action or remove an existing extension.
+
+### Duplicate Method Name
+
+If the method name is already used by another extension in the same project:
+
+```bash
+Error initializing extensions: method name extension_myMethod is already used
+by another extension in project `my-account/my-project`.
+Please choose a different method name for your new extension.
+```
+
+**Solution:** Use a unique method name.
+
+## Workflow
+
+<Steps>
+  <Step title="Create Web3 Action">
+    First, ensure you have a Web3 Action with a non-authenticated webhook trigger in your `tenderly.yaml`.
+  </Step>
+  
+  <Step title="Run Init Command">
+    Execute the init command with your desired extension name and method name:
+    
+    ```bash
+    tenderly node-extensions init \
+      --name my-extension \
+      --description "Description of my extension" \
+      --methodName extension_myMethod
+    ```
+  </Step>
+  
+  <Step title="Select Action">
+    If prompted, select which action to use from the list of eligible actions.
+  </Step>
+  
+  <Step title="Verify Configuration">
+    Check your `tenderly.yaml` file to confirm the extension was added correctly under the `node_extensions` section.
+  </Step>
+  
+  <Step title="Deploy Extension">
+    Deploy your extension to make it available:
+    
+    ```bash
+    tenderly node-extensions deploy
+    ```
+  </Step>
+</Steps>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Descriptive Method Names">
+    Choose method names that clearly indicate what the extension does:
+    
+    - **Good**: `extension_getVestedBalance`, `extension_calculateRewards`
+    - **Avoid**: `extension_method1`, `extension_temp`
+  </Accordion>
+  
+  <Accordion title="Document Your Extensions">
+    Always provide meaningful descriptions that explain:
+    - What the extension does
+    - What parameters it expects
+    - What data it returns
+    
+    This helps team members understand the purpose of each extension.
+  </Accordion>
+  
+  <Accordion title="Plan Your Actions First">
+    Before initializing extensions, design and implement your Web3 Actions. This ensures your extension logic is ready before creating the RPC endpoint.
+  </Accordion>
+  
+  <Accordion title="Keep Method Names Consistent">
+    Follow a consistent naming convention across your extensions:
+    - Use camelCase consistently
+    - Group related methods with common prefixes
+    - Example: `extension_getBalance`, `extension_getRewards`, `extension_getStaked`
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Deploy Extensions"
+    icon="rocket"
+    href="/commands/extensions/deploy"
+  >
+    Learn how to deploy your configured extensions
+  </Card>
+  <Card
+    title="Web3 Actions"
+    icon="bolt"
+    href="/commands/actions/overview"
+  >
+    Understand how to create and configure Web3 Actions
+  </Card>
+  <Card
+    title="Configuration Reference"
+    icon="file-code"
+    href="/configuration/tenderly-yaml"
+  >
+    Complete node_extensions configuration reference
+  </Card>
+  <Card
+    title="Extensions Overview"
+    icon="puzzle-piece"
+    href="/commands/extensions/overview"
+  >
+    Learn more about Node Extensions concepts
+  </Card>
+</CardGroup>

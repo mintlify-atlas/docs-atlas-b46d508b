@@ -1,0 +1,314 @@
+---
+title: 'Hardhat Integration'
+description: 'Learn how to integrate Tenderly CLI with Hardhat projects for automatic contract deployment tracking and verification'
+icon: 'hammer'
+---
+
+## Overview
+
+The Tenderly CLI integrates seamlessly with Hardhat projects through the `@tenderly/hardhat-tenderly` plugin. This integration enables automatic tracking of contract deployments, making them available for verification and monitoring in the Tenderly Dashboard.
+
+<Note>
+  For complete contract verification workflows, refer to the [Hardhat verification guide](https://docs.tenderly.co/contract-verification/hardhat) in the official Tenderly documentation.
+</Note>
+
+## Prerequisites
+
+Before integrating Tenderly with your Hardhat project, ensure you have:
+
+- A Hardhat project initialized
+- Node.js and npm/yarn installed
+- Tenderly CLI installed and authenticated
+- An active Tenderly account
+
+## Installation
+
+<Steps>
+  <Step title="Install the Hardhat Tenderly Plugin">
+    Install the `@tenderly/hardhat-tenderly` package as a development dependency:
+
+    <CodeGroup>
+      ```bash npm
+      npm install --save-dev @tenderly/hardhat-tenderly
+      ```
+
+      ```bash yarn
+      yarn add --dev @tenderly/hardhat-tenderly
+      ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Configure Your Hardhat Project">
+    Add the plugin to your Hardhat configuration file:
+
+    <Tabs>
+      <Tab title="JavaScript">
+        Add this line to your `hardhat.config.js`:
+
+        ```js hardhat.config.js
+        require("@tenderly/hardhat-tenderly");
+
+        module.exports = {
+          solidity: "0.8.0",
+          networks: {
+            // Your network configurations
+          }
+        };
+        ```
+      </Tab>
+
+      <Tab title="TypeScript">
+        Add this import to your `hardhat.config.ts`:
+
+        ```typescript hardhat.config.ts
+        import "@tenderly/hardhat-tenderly";
+
+        const config: HardhatUserConfig = {
+          solidity: "0.8.0",
+          networks: {
+            // Your network configurations
+          }
+        };
+
+        export default config;
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Initialize Tenderly in Your Project">
+    Run the Tenderly initialization command to connect your local project with your Tenderly Dashboard:
+
+    ```bash
+    tenderly init
+    ```
+
+    This command will:
+    - Prompt you to select or create a Tenderly project
+    - Generate a `tenderly.yaml` configuration file
+    - Set up the project connection
+  </Step>
+</Steps>
+
+## Usage in Deployment Scripts
+
+### Tracking Single Contract Deployments
+
+When deploying contracts, use the `persistArtifacts` method to track them in Tenderly:
+
+```javascript scripts/deploy.js
+const hre = require("hardhat");
+
+async function main() {
+  // Deploy your contract using ethers
+  const Greeter = await ethers.getContractFactory("Greeter");
+  const greeter = await Greeter.deploy("Hello, Hardhat!");
+
+  await greeter.deployed();
+
+  console.log("Greeter deployed to:", greeter.address);
+
+  // Track the deployment in Tenderly
+  await hre.tenderly.persistArtifacts({
+    name: "Greeter",
+    address: greeter.address,
+  });
+
+  console.log("Contract tracked in Tenderly");
+}
+
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+```
+
+### Tracking Multiple Contract Deployments
+
+The `persistArtifacts` method accepts variadic parameters, allowing you to track multiple contracts in a single call:
+
+```javascript scripts/deploy-multiple.js
+const hre = require("hardhat");
+
+async function main() {
+  // Deploy multiple contracts
+  const Greeter = await ethers.getContractFactory("Greeter");
+  const greeter = await Greeter.deploy("Hello, Hardhat!");
+  await greeter.deployed();
+
+  const Token = await ethers.getContractFactory("Token");
+  const token = await Token.deploy("MyToken", "MTK");
+  await token.deployed();
+
+  // Track all contracts at once
+  const contracts = [
+    {
+      name: "Greeter",
+      address: greeter.address
+    },
+    {
+      name: "Token",
+      address: token.address
+    }
+  ];
+
+  await hre.tenderly.persistArtifacts(...contracts);
+
+  console.log("All contracts tracked in Tenderly");
+}
+
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+```
+
+## Complete Integration Workflow
+
+<Steps>
+  <Step title="Compile Your Contracts">
+    Compile your Solidity contracts to generate build artifacts:
+
+    ```bash
+    npx hardhat compile
+    ```
+  </Step>
+
+  <Step title="Start Local Node (Optional)">
+    If testing locally, start a Hardhat node:
+
+    ```bash
+    npx hardhat node --network hardhat
+    ```
+  </Step>
+
+  <Step title="Deploy and Track Contracts">
+    Run your deployment script with the `persistArtifacts` calls:
+
+    ```bash
+    npx hardhat run scripts/deploy.js --network localhost
+    ```
+
+    For testnet or mainnet deployments:
+
+    ```bash
+    npx hardhat run scripts/deploy.js --network sepolia
+    ```
+  </Step>
+
+  <Step title="Verify Contracts (Optional)">
+    After deployment tracking creates the `deployments` directory, you can verify contracts:
+
+    ```bash
+    tenderly contracts verify
+    ```
+
+    Or verify specific networks:
+
+    ```bash
+    tenderly contracts verify --networks 1,5,11155111
+    ```
+  </Step>
+</Steps>
+
+## Project Structure
+
+After integration, your project will include:
+
+```
+my-hardhat-project/
+├── contracts/
+├── scripts/
+├── deployments/          # Generated by persistArtifacts
+│   ├── contract1.json
+│   └── contract2.json
+├── hardhat.config.js
+├── tenderly.yaml         # Generated by tenderly init
+└── package.json
+```
+
+## Configuration File
+
+The `tenderly.yaml` file created by `tenderly init` contains your project configuration:
+
+```yaml tenderly.yaml
+account_id: ""
+project_slug: "my-project"
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Always Call persistArtifacts" icon="database">
+    Ensure you call `persistArtifacts` after every contract deployment to maintain tracking consistency.
+  </Card>
+
+  <Card title="Deploy Before Verification" icon="shield-check">
+    The `deployments` directory must exist before running verification commands. Always deploy first.
+  </Card>
+
+  <Card title="Network-Specific Deployments" icon="network-wired">
+    Use the `--network` flag to track deployments on different networks separately.
+  </Card>
+
+  <Card title="Version Control" icon="code-branch">
+    Commit `tenderly.yaml` to version control, but consider adding `deployments/` to `.gitignore` for local testing.
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+### No deployments Directory
+
+If you see errors about missing deployment artifacts:
+
+<Steps>
+  <Step title="Verify Plugin Import">
+    Ensure the plugin is imported in your `hardhat.config.js` or `hardhat.config.ts`.
+  </Step>
+
+  <Step title="Check persistArtifacts Calls">
+    Confirm that `hre.tenderly.persistArtifacts()` is called in your deployment scripts.
+  </Step>
+
+  <Step title="Recompile and Redeploy">
+    ```bash
+    npx hardhat clean
+    npx hardhat compile
+    npx hardhat run scripts/deploy.js --network localhost
+    ```
+  </Step>
+</Steps>
+
+### Verification Fails
+
+If contract verification fails:
+
+- Ensure you're authenticated: `tenderly login`
+- Verify the project is initialized: check for `tenderly.yaml`
+- Confirm contracts are deployed to supported networks
+- Check that build artifacts are up to date
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Verify Contracts" icon="check-double" href="/commands/contracts/verify">
+    Learn how to verify contracts on Tenderly after deployment.
+  </Card>
+
+  <Card title="Push Contracts" icon="upload" href="/commands/contracts/push">
+    Explore pushing contracts to multiple projects and networks.
+  </Card>
+
+  <Card title="Monitor Transactions" icon="chart-line">
+    Set up transaction monitoring and alerts in the Tenderly Dashboard.
+  </Card>
+
+  <Card title="Hardhat Plugin Docs" icon="book" href="https://github.com/Tenderly/hardhat-tenderly">
+    View the complete hardhat-tenderly plugin documentation.
+  </Card>
+</CardGroup>

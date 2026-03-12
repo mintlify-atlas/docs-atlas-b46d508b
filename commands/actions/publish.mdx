@@ -1,0 +1,426 @@
+---
+title: "tenderly actions publish"
+description: "Publish and deploy Web3 Actions to the Tenderly platform"
+---
+
+The Tenderly CLI provides commands to publish and deploy your Web3 Actions. Use `tenderly actions publish` to upload Actions to the dashboard without activating them, or `tenderly actions deploy` to both publish and deploy Actions with active triggers.
+
+## Commands
+
+### tenderly actions build
+
+```bash
+tenderly actions build
+```
+
+Validates configuration and builds your Actions locally without deploying. Use this to test your code and ensure everything compiles correctly.
+
+### tenderly actions publish
+
+```bash
+tenderly actions publish
+```
+
+Publishes Actions to the Tenderly dashboard without deploying them. The Actions are uploaded but their triggers remain inactive.
+
+### tenderly actions deploy
+
+```bash
+tenderly actions deploy
+```
+
+Publishes and deploys Actions with active triggers. Once deployed, Actions will automatically execute when their trigger conditions are met.
+
+## What These Commands Do
+
+All three commands follow a similar workflow:
+
+<Steps>
+  <Step title="Authenticate & Select Project">
+    Verifies authentication and selects the project (or uses `--project` flag)
+  </Step>
+  <Step title="Load Configuration">
+    Reads Actions configuration from `tenderly.yaml`
+  </Step>
+  <Step title="Validate Runtime">
+    Ensures the runtime version (`v1` or `v2`) is supported
+  </Step>
+  <Step title="Parse & Validate Triggers">
+    Validates all trigger configurations and checks for errors
+  </Step>
+  <Step title="Build TypeScript (if applicable)">
+    Compiles TypeScript code using `npm run build`
+  </Step>
+  <Step title="Validate Dependencies">
+    Checks `package.json` dependencies for compatibility
+  </Step>
+  <Step title="Validate Functions">
+    Ensures all function locators point to existing files
+  </Step>
+  <Step title="Upload (publish/deploy only)">
+    Packages and uploads source code and dependencies to Tenderly
+  </Step>
+  <Step title="Activate Triggers (deploy only)">
+    Enables trigger scheduling for deployed Actions
+  </Step>
+</Steps>
+
+## Build Process
+
+### TypeScript Projects
+
+For TypeScript Actions, the build process:
+
+1. **Installs Dependencies**: Runs `npm install` in the sources directory
+2. **Compiles TypeScript**: Executes `npm run build` (runs `tsc` compiler)
+3. **Validates Output**: Checks that compiled `.js` files exist in the `outDir`
+
+```bash
+npm --prefix ./actions install
+npm --prefix ./actions run build
+```
+
+<Note>
+Your `tsconfig.json` must specify `compilerOptions.outDir`. The CLI validates that all functions compile to this directory.
+</Note>
+
+### JavaScript Projects
+
+JavaScript projects don't require compilation. The CLI directly validates and packages `.js` files.
+
+## Validation
+
+### Trigger Validation
+
+The CLI validates all trigger configurations before publishing:
+
+<Tabs>
+  <Tab title="Block Trigger">
+    ```yaml
+    trigger:
+      type: block
+      block:
+        network:
+          - 1          # Ethereum Mainnet
+        blocks: 10     # Every 10 blocks
+    ```
+
+    **Validation:**
+    - `network` must be a supported network ID
+    - `blocks` must be greater than 0
+  </Tab>
+  <Tab title="Transaction Trigger">
+    ```yaml
+    trigger:
+      type: transaction
+      transaction:
+        status:
+          - success
+        filters:
+          - network: 1
+            contract:
+              address: "0x1234..."
+    ```
+
+    **Validation:**
+    - `status` must be valid (success, failed, or both)
+    - `filters` must have at least one element
+    - Addresses must match regex `^0x[0-9a-f]{40}$`
+  </Tab>
+  <Tab title="Periodic Trigger">
+    ```yaml
+    trigger:
+      type: periodic
+      periodic:
+        interval: 1h
+        # OR
+        cron: "0 * * * *"
+    ```
+
+    **Validation:**
+    - Must have either `interval` OR `cron` (not both)
+    - `interval` must be one of: `5m`, `10m`, `15m`, `30m`, `1h`, `3h`, `6h`, `12h`, `1d`
+    - `cron` must be valid cron syntax
+  </Tab>
+  <Tab title="Webhook Trigger">
+    ```yaml
+    trigger:
+      type: webhook
+      webhook:
+        authenticated: true
+    ```
+
+    **Validation:**
+    - `authenticated` defaults to `true` if not specified
+  </Tab>
+  <Tab title="Alert Trigger">
+    ```yaml
+    trigger:
+      type: alert
+      alert:
+        id: "alert-id-here"
+        # OR
+        name: "My Alert Name"
+    ```
+
+    **Validation:**
+    - Must have either `id` OR `name` (not both)
+  </Tab>
+</Tabs>
+
+### Execution Type Validation
+
+The `execution_type` field must be either `parallel` or `sequential`:
+
+```yaml
+execution_type: parallel    # ASYNC invocation (default)
+# OR
+execution_type: sequential  # SYNC invocation
+```
+
+**Parallel (ASYNC):**
+- Multiple instances can run simultaneously
+- Better for high-frequency triggers
+- No execution order guarantee
+
+**Sequential (SYNC):**
+- Only one instance runs at a time
+- Subsequent triggers queue up
+- Guaranteed execution order
+
+<Note>
+If `execution_type` is omitted, it defaults to `parallel`.
+</Note>
+
+### Function Validation
+
+The CLI validates that:
+1. Function locator format is correct: `filename:functionName`
+2. The file exists in the sources directory (with `.ts` or `.js` extension)
+3. For TypeScript: compiled `.js` file exists in `outDir`
+
+### Dependency Validation
+
+If `package.json` exists, the CLI validates:
+- Required packages are installed
+- Package versions are compatible with the runtime
+- No conflicting dependencies
+
+## Package Size Limits
+
+The CLI enforces a **45 MB limit** for packaged Actions:
+
+- **Logic (source code)**: Maximum 45 MB
+- **Dependencies (`node_modules`)**: Maximum 45 MB
+
+If your package exceeds these limits, consider:
+1. Removing unused dependencies
+2. Using lighter-weight alternatives
+3. Excluding development dependencies from production builds
+
+## Incremental Uploads
+
+The CLI uses content hashing to avoid re-uploading unchanged files:
+
+- **Logic hash**: Hash of compiled source code
+- **Dependencies hash**: Hash of `node_modules`
+
+If hashes match the previously published version, those parts are skipped, making subsequent publishes faster.
+
+## Examples
+
+### Build and Validate Locally
+
+```bash
+tenderly actions build
+```
+
+**Output:**
+```
+Building actions:
+- example
+
+Validating triggers configuration...
+Validating actions...
+
+Build completed.
+```
+
+### Publish Without Deploying
+
+```bash
+tenderly actions publish
+```
+
+**Output:**
+```
+Building actions:
+- example
+
+Validating triggers configuration...
+Validating actions...
+
+Publishing actions:
+- example
+
+Published actions:
+- example (actionId = abc123, versionId = v456) https://dashboard.tenderly.co/project/action/abc123
+```
+
+### Deploy to Production
+
+```bash
+tenderly actions deploy
+```
+
+**Output:**
+```
+Building actions:
+- example
+
+Validating triggers configuration...
+Validating actions...
+
+Publishing and deploying actions:
+- example
+
+Published and deployed actions:
+- example (actionId = abc123, versionId = v456) https://dashboard.tenderly.co/project/action/abc123
+```
+
+### Specify Project
+
+```bash
+tenderly actions deploy --project myusername/my-project
+```
+
+Skips project selection prompt and deploys to the specified project.
+
+## Dashboard URLs
+
+After publishing or deploying, the CLI outputs dashboard URLs for each Action:
+
+```
+https://dashboard.tenderly.co/{project-slug}/action/{action-id}
+```
+
+Visit these URLs to:
+- View Action execution logs
+- Monitor trigger events
+- Edit Action configuration
+- Pause or resume Actions
+
+## Common Errors
+
+### Missing TypeScript Config
+
+```
+Missing typescript config file in your sources!
+```
+
+**Solution:** Create a `tsconfig.json` with `compilerOptions.outDir` set:
+
+```json
+{
+  "compilerOptions": {
+    "outDir": "./out"
+  }
+}
+```
+
+### Compiled Files Not Found
+
+```
+Unable to resolve path for some of the compiled files: out/example.js
+```
+
+**Solution:** Ensure:
+1. TypeScript compilation succeeds: `npm run build`
+2. The `outDir` matches your `tsconfig.json`
+3. All imported files are in the sources directory
+
+### Invalid Execution Type
+
+```
+Invalid execution type async for action example. Supported values: {sequential, parallel}
+```
+
+**Solution:** Use `sequential` or `parallel` in your action spec:
+
+```yaml
+execution_type: parallel
+```
+
+### Invalid Trigger Configuration
+
+```
+Found errors when validating triggers
+example.trigger.block: blocks must be greater than 0, found -1
+```
+
+**Solution:** Fix the trigger configuration in `tenderly.yaml`:
+
+```yaml
+trigger:
+  type: block
+  block:
+    blocks: 10  # Must be positive
+```
+
+### Function Not Found
+
+```
+Invalid locator example:myFunction (file actions/example.ts not found).
+```
+
+**Solution:** Ensure:
+1. The file exists in the sources directory
+2. The function is exported
+3. The locator format is correct: `filename:functionName`
+
+## Global Flags
+
+```bash
+--project string    The project slug in which the actions will be published & deployed
+```
+
+Use this flag to skip project selection prompts:
+
+```bash
+tenderly actions publish --project myusername/my-project
+tenderly actions deploy --project myusername/my-project
+```
+
+## Build vs Publish vs Deploy
+
+| Command | Validates | Compiles | Uploads | Activates Triggers |
+|---------|-----------|----------|---------|-------------------|
+| `build` | ✓ | ✓ | ✗ | ✗ |
+| `publish` | ✓ | ✓ | ✓ | ✗ |
+| `deploy` | ✓ | ✓ | ✓ | ✓ |
+
+**Use cases:**
+- **`build`**: Local development and testing
+- **`publish`**: Upload new versions without activating them
+- **`deploy`**: Full deployment to production
+
+## Version Control with Git
+
+The CLI includes Git commit information when publishing Actions:
+
+```bash
+Commitish: abc123def456
+```
+
+This helps track which version of your code is deployed. The commit hash is extracted from your Git repository automatically.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Actions Overview" icon="book" href="/commands/actions/overview">
+    Learn about trigger types and execution modes
+  </Card>
+  <Card title="Initialize Actions" icon="rocket" href="/commands/actions/init">
+    Set up a new Actions project
+  </Card>
+</CardGroup>

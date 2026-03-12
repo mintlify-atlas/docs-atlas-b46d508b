@@ -1,0 +1,336 @@
+---
+title: 'Environment Variables'
+description: 'Configuration options via environment variables'
+icon: 'gear'
+---
+
+# Environment Variables
+
+The Tenderly CLI uses configuration files for most settings, but you can also customize behavior through command-line flags and environment-specific configurations.
+
+## Configuration Files
+
+The CLI uses two main configuration files:
+
+<Accordion title="Global Configuration">
+  **Location:** `~/.tenderly/config.yaml` (or `~/.tenderly/config.json`)
+  
+  **Purpose:** Stores user authentication and global settings
+  
+  **Contents:**
+  - Access tokens and authentication keys
+  - Account ID
+  - Username or organization name
+  - Email (for user accounts)
+  
+  **Customization:**
+  You can change the global config file name using the `--global-config` flag:
+  
+  ```bash
+  tenderly --global-config my-config [command]
+  ```
+  
+  This will look for `~/.tenderly/my-config.yaml` instead of `config.yaml`.
+</Accordion>
+
+<Accordion title="Project Configuration">
+  **Location:** `./tenderly.yaml` (in your project directory)
+  
+  **Purpose:** Stores project-specific settings
+  
+  **Contents:**
+  - Project slug
+  - Account ID
+  - Provider (deployment framework)
+  - Compiler configuration
+  - Network settings
+  - Actions configuration
+  - Node extensions configuration
+  
+  **Customization:**
+  You can change the project config file name using the `--project-config` flag:
+  
+  ```bash
+  tenderly --project-config my-project [command]
+  ```
+  
+  This will look for `my-project.yaml` instead of `tenderly.yaml`.
+</Accordion>
+
+---
+
+## Configuration Flags
+
+While the Tenderly CLI doesn't use traditional environment variables, you can configure it using global flags:
+
+### Global Flags
+
+<ParamField path="--global-config" type="string" default="config">
+  Specify a custom global configuration file name (without extension)
+  
+  **Example:**
+  ```bash
+  tenderly --global-config staging login
+  tenderly --global-config staging whoami
+  ```
+  
+  This allows you to maintain separate configurations for different environments.
+</ParamField>
+
+<ParamField path="--project-config" type="string" default="tenderly">
+  Specify a custom project configuration file name (without extension)
+  
+  **Example:**
+  ```bash
+  tenderly --project-config tenderly-dev init
+  tenderly --project-config tenderly-prod contracts push
+  ```
+  
+  This allows you to maintain separate project configurations for different environments.
+</ParamField>
+
+<ParamField path="--project-dir" type="string" default=".">
+  Specify the project directory containing your smart contracts
+  
+  **Example:**
+  ```bash
+  tenderly --project-dir ./my-contracts init
+  tenderly --project-dir ./path/to/project contracts push
+  ```
+</ParamField>
+
+<ParamField path="--output" type="string" default="text">
+  Set the output format: `text` or `json`
+  
+  **Example:**
+  ```bash
+  tenderly --output json whoami
+  tenderly --output json contracts push
+  ```
+  
+  JSON output is useful for scripting and automation.
+</ParamField>
+
+<ParamField path="--debug" type="boolean" default="false">
+  Enable debug logging for troubleshooting
+  
+  **Example:**
+  ```bash
+  tenderly --debug contracts push
+  tenderly --debug actions deploy
+  ```
+  
+  Debug mode provides detailed logging including:
+  - API request/response details
+  - File system operations
+  - Internal processing steps
+</ParamField>
+
+<ParamField path="--reset-provider" type="boolean" default="false">
+  Clear the set deployment provider and auto-detect
+  
+  **Example:**
+  ```bash
+  tenderly --reset-provider init
+  ```
+  
+  Useful when switching between different smart contract frameworks (Truffle, Hardhat, etc.)
+</ParamField>
+
+---
+
+## Multi-Environment Setup
+
+You can manage multiple environments using different configuration files:
+
+### Separate Global Configs
+
+Maintain separate authentication for different accounts:
+
+<CodeGroup>
+```bash Development Account
+# Login with development account
+tenderly --global-config dev login
+
+# Use development account
+tenderly --global-config dev whoami
+tenderly --global-config dev contracts push
+```
+
+```bash Production Account
+# Login with production account
+tenderly --global-config prod login
+
+# Use production account
+tenderly --global-config prod whoami
+tenderly --global-config prod contracts push
+```
+</CodeGroup>
+
+This creates separate config files:
+- `~/.tenderly/dev.yaml`
+- `~/.tenderly/prod.yaml`
+
+### Separate Project Configs
+
+Maintain different project settings:
+
+<CodeGroup>
+```bash tenderly-dev.yaml
+project_slug: my-project-dev
+account_id: dev-account
+provider: hardhat
+networks:
+  - 5  # Goerli testnet
+```
+
+```bash tenderly-prod.yaml
+project_slug: my-project-prod
+account_id: prod-account
+provider: hardhat
+networks:
+  - 1   # Ethereum mainnet
+  - 137 # Polygon mainnet
+```
+</CodeGroup>
+
+Use them with:
+
+```bash
+# Development
+tenderly --project-config tenderly-dev contracts push
+
+# Production
+tenderly --project-config tenderly-prod contracts push
+```
+
+---
+
+## CI/CD Integration
+
+For continuous integration and deployment pipelines, use these patterns:
+
+### Authenticate with Access Key
+
+<CodeGroup>
+```bash GitHub Actions
+- name: Login to Tenderly
+  run: |
+    tenderly login \
+      --authentication-method access-key \
+      --access-key ${{ secrets.TENDERLY_ACCESS_KEY }}
+
+- name: Push contracts
+  run: tenderly contracts push
+```
+
+```bash GitLab CI
+script:
+  - tenderly login --authentication-method access-key --access-key $TENDERLY_ACCESS_KEY
+  - tenderly contracts push
+```
+
+```bash CircleCI
+steps:
+  - run:
+      name: Login to Tenderly
+      command: |
+        tenderly login \
+          --authentication-method access-key \
+          --access-key $TENDERLY_ACCESS_KEY
+  
+  - run:
+      name: Push contracts
+      command: tenderly contracts push
+```
+</CodeGroup>
+
+### JSON Output for Parsing
+
+Use JSON output mode for programmatic access:
+
+```bash
+# Get user info as JSON
+tenderly --output json whoami
+
+# Parse with jq
+USER_ID=$(tenderly --output json whoami | jq -r '.id')
+```
+
+### Non-Interactive Mode
+
+Provide all parameters via flags to avoid prompts:
+
+```bash
+# Initialize without prompts
+tenderly init \
+  --project my-project \
+  --force
+
+# Login without prompts
+tenderly login \
+  --authentication-method access-key \
+  --access-key $ACCESS_KEY \
+  --force
+```
+
+---
+
+## Configuration File Locations
+
+<Accordion title="Global Configuration Directory">
+  **Default Location:** `~/.tenderly/`
+  
+  **Files:**
+  - `config.yaml` (or `config.json`) - Main config file
+  - Custom configs when using `--global-config` flag
+  
+  **Permissions:** These files contain sensitive authentication tokens. Ensure they have appropriate file permissions:
+  
+  ```bash
+  chmod 600 ~/.tenderly/config.yaml
+  ```
+</Accordion>
+
+<Accordion title="Project Configuration Files">
+  **Default Location:** Project root directory
+  
+  **Files:**
+  - `tenderly.yaml` (or `tenderly.json`) - Main project config
+  - Custom configs when using `--project-config` flag
+  
+  **Version Control:** The project config file should be committed to version control, but be careful not to include sensitive data. The global config with authentication tokens should NOT be committed.
+</Accordion>
+
+---
+
+## Best Practices
+
+<Card title="Secure Credentials" icon="lock">
+  Never commit authentication tokens or access keys to version control. Use:
+  - Separate global configs for different accounts
+  - CI/CD secret management for automation
+  - Access keys instead of email/password for automated workflows
+</Card>
+
+<Card title="Environment Separation" icon="layer-group">
+  Use different project configs for different environments:
+  - `tenderly-dev.yaml` for development
+  - `tenderly-staging.yaml` for staging
+  - `tenderly-prod.yaml` for production
+</Card>
+
+<Card title="Automation" icon="robot">
+  For CI/CD pipelines:
+  - Use `--output json` for programmatic parsing
+  - Provide all flags to avoid interactive prompts
+  - Use access keys for authentication
+  - Enable `--debug` when troubleshooting
+</Card>
+
+<Card title="Multi-Account Management" icon="users">
+  Manage multiple Tenderly accounts:
+  - Use `--global-config` to switch between accounts
+  - Keep separate configs for personal, team, and client accounts
+  - Document which config corresponds to which account
+</Card>

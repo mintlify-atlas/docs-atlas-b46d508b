@@ -1,0 +1,333 @@
+---
+title: "devnet spawn-rpc"
+description: "Spawn a DevNet RPC endpoint for blockchain development and testing"
+icon: "terminal"
+---
+
+## Overview
+
+The `tenderly devnet spawn-rpc` command creates a JSON-RPC endpoint for your DevNet, allowing you to connect development tools, frameworks, and scripts to your local blockchain development environment.
+
+## Usage
+
+```bash
+tenderly devnet spawn-rpc [flags]
+```
+
+## Description
+
+This command spawns a DevNet RPC endpoint that represents the JSON-RPC interface for your development blockchain. The RPC endpoint can be used with tools like Hardhat, Foundry, web3.js, ethers.js, and other Ethereum development frameworks.
+
+<Note>
+A template must be specified when spawning a DevNet RPC. Templates define the initial configuration and state of your development network.
+</Note>
+
+## Flags
+
+### Required Flags
+
+<ParamField path="--template" type="string" required>
+  The DevNet template slug to apply when spawning the DevNet RPC. Templates define the network configuration and initial state.
+  
+  ```bash
+  tenderly devnet spawn-rpc --template mainnet-fork
+  ```
+</ParamField>
+
+### Optional Flags
+
+<ParamField path="--account" type="string">
+  The Tenderly account username or organization slug. If not provided, the system reads `account_id` from `tenderly.yaml`.
+  
+  ```bash
+  tenderly devnet spawn-rpc --account my-org --template my-template
+  ```
+</ParamField>
+
+<ParamField path="--project" type="string">
+  The DevNet project slug. If not provided, the system reads `project_slug` from `tenderly.yaml`.
+  
+  ```bash
+  tenderly devnet spawn-rpc --project my-project --template my-template
+  ```
+</ParamField>
+
+<ParamField path="--access_key" type="string">
+  The Tenderly access key for authentication. If not provided, the system reads `access_key` from `tenderly.yaml` or uses the stored authentication token.
+  
+  ```bash
+  tenderly devnet spawn-rpc --access_key your-access-key --template my-template
+  ```
+</ParamField>
+
+<ParamField path="--token" type="string">
+  The Tenderly JWT token for authentication. If not provided, the system reads `token` from `tenderly.yaml` or uses the stored authentication.
+  
+  ```bash
+  tenderly devnet spawn-rpc --token your-jwt-token --template my-template
+  ```
+</ParamField>
+
+<ParamField path="--return-url" type="boolean" default="false">
+  Return only the URL without additional logging output. Useful for scripting and automation.
+  
+  ```bash
+  tenderly devnet spawn-rpc --template my-template --return-url
+  ```
+</ParamField>
+
+## Examples
+
+### Basic Usage
+
+Spawn a DevNet RPC using a template with default project settings from `tenderly.yaml`:
+
+```bash
+tenderly devnet spawn-rpc --template mainnet-fork
+```
+
+### Specify Account and Project
+
+Explicitly set the account and project for the DevNet:
+
+```bash
+tenderly devnet spawn-rpc \
+  --account my-organization \
+  --project defi-testing \
+  --template uniswap-v3-fork
+```
+
+### Use Access Key Authentication
+
+Spawn a DevNet with explicit access key authentication:
+
+```bash
+tenderly devnet spawn-rpc \
+  --access_key TENDERLY_ACCESS_KEY \
+  --template custom-network \
+  --project smart-contract-dev
+```
+
+### Return URL for Scripting
+
+Get only the RPC URL for use in scripts or CI/CD pipelines:
+
+```bash
+RPC_URL=$(tenderly devnet spawn-rpc --template mainnet-fork --return-url)
+echo "DevNet RPC endpoint: $RPC_URL"
+```
+
+<CodeGroup>
+
+```bash Basic
+tenderly devnet spawn-rpc --template mainnet-fork
+```
+
+```bash With Project
+tenderly devnet spawn-rpc \
+  --account my-org \
+  --project my-project \
+  --template ethereum-mainnet
+```
+
+```bash Scripting
+#!/bin/bash
+RPC_URL=$(tenderly devnet spawn-rpc \
+  --template test-network \
+  --return-url)
+
+# Use the RPC URL in your tests
+npx hardhat test --network $RPC_URL
+```
+
+```bash CI/CD Pipeline
+# .github/workflows/test.yml
+- name: Spawn DevNet
+  run: |
+    export DEVNET_RPC=$(tenderly devnet spawn-rpc \
+      --template mainnet-fork \
+      --access_key ${{ secrets.TENDERLY_ACCESS_KEY }} \
+      --return-url)
+    echo "DEVNET_RPC=$DEVNET_RPC" >> $GITHUB_ENV
+
+- name: Run Tests
+  run: npm test
+  env:
+    RPC_URL: ${{ env.DEVNET_RPC }}
+```
+
+</CodeGroup>
+
+## Authentication
+
+The command requires authentication through one of the following methods (in order of precedence):
+
+<Steps>
+  <Step title="Command-line Flags">
+    Provide `--access_key` or `--token` flags directly in the command.
+  </Step>
+  
+  <Step title="Configuration File">
+    Store credentials in `tenderly.yaml` configuration file.
+  </Step>
+  
+  <Step title="Login Session">
+    Use credentials from `tenderly login` command.
+  </Step>
+</Steps>
+
+<Info>
+For security best practices, avoid hardcoding credentials in scripts. Use environment variables or secure secret management in CI/CD environments.
+</Info>
+
+## Configuration Precedence
+
+When multiple configuration sources are available, the command follows this precedence order:
+
+1. **Command-line flags** - Highest priority
+2. **tenderly.yaml file** - Project-level configuration
+3. **Global configuration** - From `tenderly login` session
+
+This allows you to override project defaults on a per-command basis.
+
+## Error Handling
+
+### Missing Template
+
+If the `--template` flag is not provided:
+
+```
+Error: Missing required argument 'template'
+The 'template' argument is required. Please include the --template flag 
+and provide the DevNet template slug.
+```
+
+**Solution:** Always specify a template when spawning a DevNet RPC.
+
+### Missing Account
+
+If no account is found in flags or configuration:
+
+```
+Error: account not found
+An account is required. Please log in using tenderly login 
+or include the '--account' flag.
+```
+
+**Solution:** Run `tenderly login` or provide the `--account` flag.
+
+### Missing Project
+
+If no project is found in flags or configuration:
+
+```
+Error: project not found
+No project was found. To set a project, use tenderly use project <project-slug> 
+or include the '--project' flag.
+```
+
+**Solution:** Set a project with `tenderly use project` or provide the `--project` flag.
+
+### Missing Authentication
+
+If neither access key nor token is available:
+
+```
+Error: access key or token not found
+An access key or token is required. Please log in using tenderly login 
+or include the '--access_key' or '--token' flag.
+```
+
+**Solution:** Run `tenderly login` or provide authentication credentials.
+
+## Use Cases
+
+### Local Development
+
+Spawn a DevNet for local smart contract development:
+
+```bash
+# Spawn DevNet with mainnet fork template
+tenderly devnet spawn-rpc --template mainnet-fork --return-url > .env.devnet
+
+# Use in your Hardhat config
+# hardhat.config.js
+require('dotenv').config({ path: '.env.devnet' });
+
+module.exports = {
+  networks: {
+    devnet: {
+      url: process.env.DEVNET_RPC
+    }
+  }
+};
+```
+
+### Integration Testing
+
+Create isolated DevNets for integration tests:
+
+```bash
+# test-setup.sh
+DEVNET_RPC=$(tenderly devnet spawn-rpc \
+  --template test-environment \
+  --return-url)
+
+export TEST_RPC_URL=$DEVNET_RPC
+npm run test:integration
+```
+
+### Multi-Network Testing
+
+Spawn multiple DevNets for cross-chain testing:
+
+```bash
+# Spawn Ethereum DevNet
+ETH_RPC=$(tenderly devnet spawn-rpc \
+  --template ethereum-mainnet \
+  --return-url)
+
+# Spawn Polygon DevNet  
+POLY_RPC=$(tenderly devnet spawn-rpc \
+  --template polygon-mainnet \
+  --return-url)
+
+# Run cross-chain tests
+npx hardhat test --network-eth $ETH_RPC --network-poly $POLY_RPC
+```
+
+## Related Commands
+
+<CardGroup cols={2}>
+  <Card title="DevNets Overview" icon="network-wired" href="/commands/devnet/overview">
+    Learn more about Tenderly DevNets
+  </Card>
+  
+  <Card title="Login" icon="right-to-bracket" href="/commands/login">
+    Authenticate with Tenderly
+  </Card>
+  
+  <Card title="Initialize" icon="gear" href="/commands/init">
+    Set up a Tenderly project
+  </Card>
+  
+  <Card title="Configuration" icon="file-code" href="/configuration/tenderly-yaml">
+    Configure tenderly.yaml
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<Steps>
+  <Step title="Create a template">
+    Define templates for your common DevNet configurations in the Tenderly Dashboard.
+  </Step>
+  
+  <Step title="Integrate with your framework">
+    Configure your development framework (Hardhat, Foundry, etc.) to use the DevNet RPC endpoint.
+  </Step>
+  
+  <Step title="Automate testing">
+    Add DevNet spawning to your CI/CD pipeline for automated testing.
+  </Step>
+</Steps>

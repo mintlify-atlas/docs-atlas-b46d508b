@@ -1,0 +1,445 @@
+---
+title: 'Truffle Integration'
+description: 'Integrate Tenderly CLI with Truffle projects for contract verification and monitoring'
+icon: 'cube'
+---
+
+## Overview
+
+Tenderly CLI provides native support for Truffle projects, automatically detecting your project structure and reading build artifacts from your Truffle compilation process. This enables seamless contract verification and deployment tracking.
+
+## Prerequisites
+
+Before integrating Tenderly with your Truffle project:
+
+- Have a Truffle project initialized
+- Install Truffle globally or locally
+- Install and authenticate Tenderly CLI
+- Have an active Tenderly account
+
+## Supported Configuration Files
+
+Tenderly CLI supports both Truffle configuration file naming conventions:
+
+- `truffle-config.js` (recommended, new format)
+- `truffle.js` (legacy format)
+
+<Note>
+  Tenderly CLI automatically detects which configuration file your project uses and reads the compiler settings, networks, and build directory path.
+</Note>
+
+## Installation
+
+<Steps>
+  <Step title="Install Truffle">
+    Install Truffle globally if you haven't already:
+
+    <CodeGroup>
+      ```bash npm
+      npm install -g truffle
+      ```
+
+      ```bash yarn
+      yarn global add truffle
+      ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Install Tenderly CLI">
+    Install the Tenderly CLI for your operating system:
+
+    <Tabs>
+      <Tab title="macOS">
+        Using Homebrew:
+        ```bash
+        brew tap tenderly/tenderly
+        brew install tenderly
+        ```
+
+        Or using cURL:
+        ```bash
+        curl https://raw.githubusercontent.com/Tenderly/tenderly-cli/master/scripts/install-macos.sh | sh
+        ```
+      </Tab>
+
+      <Tab title="Linux">
+        ```bash
+        curl https://raw.githubusercontent.com/Tenderly/tenderly-cli/master/scripts/install-linux.sh | sh
+        ```
+      </Tab>
+
+      <Tab title="Windows">
+        Download the latest release from the [GitHub releases page](https://github.com/Tenderly/tenderly-cli/releases) and add it to your PATH.
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Authenticate with Tenderly">
+    Log in to your Tenderly account:
+
+    ```bash
+    tenderly login
+    ```
+
+    You can authenticate using email or access key:
+
+    ```bash
+    # Using email authentication
+    tenderly login --authentication-method email
+
+    # Using access key
+    tenderly login --authentication-method access-key --access-key YOUR_KEY
+    ```
+  </Step>
+
+  <Step title="Initialize Your Project">
+    Navigate to your Truffle project directory and initialize Tenderly:
+
+    ```bash
+    cd /path/to/your/truffle/project
+    tenderly init
+    ```
+
+    This creates a `tenderly.yaml` configuration file in your project root.
+  </Step>
+</Steps>
+
+## Truffle Configuration
+
+Your `truffle-config.js` should contain standard Truffle configuration:
+
+```javascript truffle-config.js
+module.exports = {
+  networks: {
+    development: {
+      host: "127.0.0.1",
+      port: 8545,
+      network_id: "*"
+    },
+    sepolia: {
+      provider: () => new HDWalletProvider(
+        process.env.MNEMONIC,
+        `https://sepolia.infura.io/v3/${process.env.INFURA_KEY}`
+      ),
+      network_id: 11155111,
+      gas: 4500000,
+      gasPrice: 10000000000
+    },
+    mainnet: {
+      provider: () => new HDWalletProvider(
+        process.env.MNEMONIC,
+        `https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`
+      ),
+      network_id: 1,
+      gas: 4500000,
+      gasPrice: 10000000000
+    }
+  },
+
+  compilers: {
+    solc: {
+      version: "0.8.19",
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        }
+      }
+    }
+  }
+};
+```
+
+<Note>
+  Tenderly CLI reads your compiler configuration directly from this file to ensure verification uses the exact same settings.
+</Note>
+
+## Contract Deployment Workflow
+
+<Steps>
+  <Step title="Write Your Contracts">
+    Create your Solidity contracts in the `contracts/` directory:
+
+    ```solidity contracts/MyToken.sol
+    // SPDX-License-Identifier: MIT
+    pragma solidity ^0.8.19;
+
+    import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+    contract MyToken is ERC20 {
+        constructor(uint256 initialSupply) ERC20("MyToken", "MTK") {
+            _mint(msg.sender, initialSupply);
+        }
+    }
+    ```
+  </Step>
+
+  <Step title="Create Migration Scripts">
+    Add migration scripts in the `migrations/` directory:
+
+    ```javascript migrations/2_deploy_contracts.js
+    const MyToken = artifacts.require("MyToken");
+
+    module.exports = function (deployer) {
+      // Deploy with 1 million tokens
+      deployer.deploy(MyToken, web3.utils.toWei("1000000", "ether"));
+    };
+    ```
+  </Step>
+
+  <Step title="Compile Contracts">
+    Compile your Solidity contracts:
+
+    ```bash
+    truffle compile
+    ```
+
+    This generates build artifacts in the `build/contracts/` directory.
+  </Step>
+
+  <Step title="Deploy to Network">
+    Deploy your contracts to your target network:
+
+    ```bash
+    # Deploy to local development network
+    truffle migrate --network development
+
+    # Deploy to testnet
+    truffle migrate --network sepolia
+
+    # Deploy to mainnet
+    truffle migrate --network mainnet
+    ```
+  </Step>
+
+  <Step title="Verify on Tenderly">
+    After deployment, verify your contracts on Tenderly:
+
+    ```bash
+    tenderly contracts verify
+    ```
+
+    Verify specific networks only:
+
+    ```bash
+    # Verify only mainnet and sepolia
+    tenderly contracts verify --networks 1,11155111
+    ```
+  </Step>
+</Steps>
+
+## Tenderly Configuration
+
+The `tenderly.yaml` file stores your project configuration:
+
+### Basic Configuration
+
+```yaml tenderly.yaml
+account_id: "your-account-id"
+project_slug: "my-truffle-project"
+```
+
+### Multi-Project Configuration
+
+You can push contracts to multiple Tenderly projects by configuring the projects map:
+
+```yaml tenderly.yaml
+projects:
+  my-mainnet-project:
+    networks:
+      - "1"      # Ethereum Mainnet
+      - "137"    # Polygon Mainnet
+  
+  my-testnet-project:
+    networks:
+      - "11155111"  # Sepolia
+      - "80001"     # Mumbai
+  
+  shared-project:
+    # Empty networks means all detected networks
+  
+  company-account/shared-team-project:
+    # Use full identifier for shared projects
+    networks:
+      - "1"
+```
+
+<Note>
+  When using multi-project configuration, remove the `project_slug` property and use the `projects` map instead.
+</Note>
+
+## Verification Workflow
+
+### Standard Verification
+
+```bash
+# Verify all contracts on all networks
+tenderly contracts verify
+```
+
+### Network-Specific Verification
+
+```bash
+# Verify specific network IDs
+tenderly contracts verify --networks 1,5,137
+```
+
+### Verification Process
+
+When you run verification, Tenderly CLI:
+
+1. Detects your Truffle configuration file
+2. Reads compiler settings and optimization parameters
+3. Scans the `build/contracts/` directory for artifacts
+4. Extracts deployment addresses from network configurations
+5. Uploads contract source code and bytecode
+6. Verifies contracts on the Tenderly platform
+
+## Project Structure
+
+A typical Truffle project integrated with Tenderly:
+
+```
+my-truffle-project/
+├── build/
+│   └── contracts/           # Build artifacts (generated)
+│       ├── MyToken.json
+│       └── Migrations.json
+├── contracts/               # Solidity source files
+│   ├── MyToken.sol
+│   └── Migrations.sol
+├── migrations/              # Deployment scripts
+│   ├── 1_initial_migration.js
+│   └── 2_deploy_contracts.js
+├── test/                    # Contract tests
+├── truffle-config.js        # Truffle configuration
+└── tenderly.yaml            # Tenderly configuration
+```
+
+## Using with Alternative Providers
+
+Tenderly CLI can work alongside other Truffle deployment providers. The CLI automatically detects Truffle projects based on:
+
+- Presence of `truffle-config.js` or `truffle.js`
+- Standard Truffle directory structure
+- Build artifacts in `build/contracts/`
+
+## Advanced Usage
+
+### Tagging Deployments
+
+Tag your contract deployments for better organization:
+
+```bash
+tenderly contracts push --tag v1.0.0
+```
+
+### Project-Specific Push
+
+When using multi-project configuration, push to a specific project:
+
+```bash
+tenderly contracts push --project-slug my-mainnet-project
+```
+
+### Custom Project Directory
+
+Specify a custom project directory:
+
+```bash
+tenderly contracts verify --project-dir /path/to/truffle/project
+```
+
+## Global Configuration Flags
+
+All Tenderly commands support these global flags:
+
+```bash
+# Enable debug logging
+tenderly contracts verify --debug
+
+# Output in JSON format
+tenderly contracts verify --output json
+
+# Use custom config file names
+tenderly contracts verify --project-config custom-tenderly
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Compile Before Verification" icon="gears">
+    Always run `truffle compile` before verifying to ensure build artifacts are up to date.
+  </Card>
+
+  <Card title="Network ID Consistency" icon="hashtag">
+    Use standard network IDs in your Truffle config to ensure proper verification.
+  </Card>
+
+  <Card title="Version Control" icon="code-branch">
+    Commit `tenderly.yaml` but consider adding `build/` to `.gitignore`.
+  </Card>
+
+  <Card title="Multi-Network Testing" icon="network-wired">
+    Test verification on testnets before deploying to mainnet.
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+### Configuration Not Found
+
+If Tenderly can't find your Truffle configuration:
+
+<Steps>
+  <Step title="Check Configuration File">
+    Ensure you have either `truffle-config.js` or `truffle.js` in your project root.
+  </Step>
+
+  <Step title="Verify Project Structure">
+    Confirm your project has the standard Truffle directory structure.
+  </Step>
+
+  <Step title="Use Project Directory Flag">
+    Explicitly specify the project directory:
+    ```bash
+    tenderly contracts verify --project-dir ./
+    ```
+  </Step>
+</Steps>
+
+### No Contracts Found
+
+If verification reports no contracts:
+
+1. Run `truffle compile` to generate build artifacts
+2. Check that `build/contracts/` contains JSON files
+3. Verify contracts are deployed (have network entries in artifacts)
+
+### Network Not Supported
+
+If you see network errors:
+
+- Verify the network ID is supported by Tenderly
+- Check that contracts are deployed to that network
+- Ensure network configuration in `truffle-config.js` is correct
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Push Contracts" icon="upload" href="/commands/contracts/push">
+    Learn how to push contracts to public networks.
+  </Card>
+
+  <Card title="Initialize Projects" icon="rocket" href="/commands/init">
+    Explore advanced project initialization options.
+  </Card>
+
+  <Card title="Monitor Contracts" icon="eye">
+    Set up monitoring and alerts in the Tenderly Dashboard.
+  </Card>
+
+  <Card title="Truffle Documentation" icon="book" href="https://trufflesuite.com/docs/">
+    View the official Truffle documentation.
+  </Card>
+</CardGroup>

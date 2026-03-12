@@ -1,0 +1,191 @@
+---
+title: "tenderly.yaml Configuration"
+description: "Complete reference for the tenderly.yaml project configuration file"
+icon: "file-code"
+---
+
+The `tenderly.yaml` file is the project-level configuration file that connects your local project to Tenderly. It's created in your project directory when you run `tenderly init`.
+
+## File Location
+
+The file is located at the root of your project directory:
+
+```
+your-project/
+├── tenderly.yaml
+├── contracts/
+└── ...
+```
+
+## Basic Configuration
+
+A basic `tenderly.yaml` file contains your account ID, project slug, and provider information:
+
+<CodeGroup>
+```yaml Single Project
+account_id: "your-account-id"
+project_slug: "your-project-slug"
+provider: "hardhat"
+```
+
+```yaml Shared Project
+account_id: "your-account-id"
+project_slug: "organization-name/project-slug"
+provider: "hardhat"
+```
+</CodeGroup>
+
+## Configuration Fields
+
+<ParamField path="account_id" type="string" required>
+  Your Tenderly account ID. Set automatically when you run `tenderly init`.
+</ParamField>
+
+<ParamField path="project_slug" type="string" required>
+  The slug of your Tenderly project. For shared/organization projects, use the format `organization-name/project-slug`.
+</ParamField>
+
+<ParamField path="provider" type="string">
+  The development framework provider. Supported values:
+  - `hardhat`
+  - `truffle`
+  - `buidler`
+  - `brownie`
+  - `openzeppelin`
+</ParamField>
+
+<ParamField path="projects" type="object">
+  Configuration for pushing contracts to multiple projects. See [Multiple Projects](/configuration/multiple-projects) for details.
+</ParamField>
+
+## Multi-Project Configuration
+
+You can configure multiple projects in a single `tenderly.yaml` file. This is useful when you want to push the same contracts to different projects or networks:
+
+```yaml
+projects:
+  my-cool-project:
+    networks:
+      - "1"    # Ethereum Mainnet
+      - "5"    # Goerli
+  my-other-project:
+    # Empty networks array means push to all migrated networks
+  company-account/shared-project:
+    networks:
+      - "137"  # Polygon
+      - "10"   # Optimism
+```
+
+<Note>
+  When using the `projects` field, remove the `project_slug` field from your configuration.
+</Note>
+
+## Network IDs
+
+When specifying networks in your configuration, use the chain ID as a string:
+
+| Network | Chain ID |
+|---------|----------|
+| Ethereum Mainnet | "1" |
+| Goerli | "5" |
+| Sepolia | "11155111" |
+| Polygon | "137" |
+| Optimism | "10" |
+| Arbitrum | "42161" |
+| Base | "8453" |
+
+## Example Configurations
+
+<Accordion title="Single Project with Hardhat">
+```yaml
+account_id: "abc123"
+project_slug: "my-defi-project"
+provider: "hardhat"
+```
+</Accordion>
+
+<Accordion title="Multiple Projects with Network Filtering">
+```yaml
+projects:
+  mainnet-project:
+    networks:
+      - "1"    # Only push mainnet contracts
+  testnet-project:
+    networks:
+      - "5"    # Goerli
+      - "11155111"  # Sepolia
+  all-networks-project:
+    # Push to all available networks
+```
+</Accordion>
+
+<Accordion title="Organization Shared Project">
+```yaml
+account_id: "abc123"
+project_slug: "acme-corp/production-contracts"
+provider: "hardhat"
+```
+</Accordion>
+
+## File Management
+
+<Note>
+  The `tenderly.yaml` file should be committed to version control so your team can share the same project configuration.
+</Note>
+
+### Regenerating Configuration
+
+If you need to reinitialize your project configuration:
+
+```bash
+tenderly init --re-init
+```
+
+This will prompt you to select a project again and regenerate the `tenderly.yaml` file.
+
+### Custom Configuration Name
+
+You can use a custom name for your project configuration file:
+
+```bash
+tenderly push --project-config custom-config
+```
+
+This will look for `custom-config.yaml` instead of `tenderly.yaml`.
+
+## Related Configuration
+
+- **Global Config**: See `~/.tenderly/config.yaml` for authentication tokens and global settings
+- **Actions**: Use `tenderly actions init` to add action configurations to `tenderly.yaml`
+- **Extensions**: Use `tenderly extensions init` to add node extension configurations
+
+## Common Issues
+
+<Accordion title="Project not initialized error">
+If you see "You need to initiate the project first", ensure:
+
+1. The `tenderly.yaml` file exists in your project directory
+2. The file contains either a `project_slug` or `projects` field
+3. You're running commands from the correct directory
+
+You can also use `--project-dir` flag to specify a different directory:
+
+```bash
+tenderly push --project-dir /path/to/project
+```
+</Accordion>
+
+<Accordion title="Provider not detected">
+If the provider isn't detected automatically:
+
+1. Ensure your project has the necessary configuration files (`hardhat.config.js`, `truffle-config.js`, etc.)
+2. Use the `--force` flag to skip provider detection
+3. Manually set the `provider` field in `tenderly.yaml`
+</Accordion>
+
+## See Also
+
+- [Global Flags](/configuration/global-flags) - Command-line flags that work with all commands
+- [Multiple Projects](/configuration/multiple-projects) - Detailed guide for multi-project setups
+- [tenderly init](/api-reference/init) - Initialize your project
+- [tenderly push](/api-reference/push) - Push contracts to Tenderly

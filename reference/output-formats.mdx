@@ -1,0 +1,552 @@
+---
+title: 'Output Formats'
+description: 'Understanding CLI output modes and formatting'
+icon: 'display'
+---
+
+# Output Formats
+
+The Tenderly CLI supports two output modes: **text** (human-readable) and **json** (machine-readable). You can switch between them using the `--output` flag.
+
+---
+
+## Text Output (Default)
+
+Text output is designed for human readability with colors, formatting, and helpful messages.
+
+### Usage
+
+```bash
+tenderly [command]
+# or explicitly
+tenderly --output text [command]
+```
+
+### Features
+
+<Card title="Colorized Output" icon="palette">
+  Text mode includes color-coded messages:
+  - **Green** - Success messages and important values
+  - **Red** - Error messages and warnings
+  - **Yellow** - Informational messages
+  - **Blue** - Highlights and context
+</Card>
+
+<Card title="Progress Indicators" icon="spinner">
+  Visual feedback for long-running operations:
+  - Spinner animations during uploads
+  - Status messages for multi-step processes
+  - Progress updates for large operations
+</Card>
+
+<Card title="Formatted Tables" icon="table">
+  Structured data presented in readable tables and lists
+</Card>
+
+### Examples
+
+<Accordion title="Login Output">
+  ```bash
+  $ tenderly login --authentication-method email
+  
+  Select authentication method:
+  ▸ Email
+    Access key can be generated at https://dashboard.tenderly.co/account/authorization
+  
+  Enter your email: user@example.com
+  Password: ********
+  
+  ✓ Successfully logged in
+  ```
+</Accordion>
+
+<Accordion title="Whoami Output">
+  ```bash
+  $ tenderly whoami
+  
+  ID: abc123def456
+  Email: user@example.com
+  Username: myusername
+  ```
+</Accordion>
+
+<Accordion title="Contract Push Output">
+  ```bash
+  $ tenderly contracts push
+  
+  Setting up your project...
+  Analyzing Hardhat configuration...
+  
+  We have detected the following Smart Contracts:
+  • Token
+  • Marketplace
+  • NFT
+  
+  ⠋ Uploading contracts...
+  
+  Successfully pushed Smart Contracts for project my-project.
+  You can view your contracts at https://dashboard.tenderly.co/username/my-project/contracts
+  ```
+</Accordion>
+
+<Accordion title="Actions Deploy Output">
+  ```bash
+  $ tenderly actions deploy
+  
+  Building actions:
+  - tokenMonitor
+  - priceAlert
+  
+  Validating triggers configuration...
+  Installing dependencies...
+  Building actions...
+  Validating actions...
+  
+  Publishing and deploying actions:
+  - tokenMonitor
+  - priceAlert
+  
+  ⠋ Deploying...
+  
+  Published and deployed actions:
+  - tokenMonitor (actionId = act_123, versionId = ver_456) https://dashboard.tenderly.co/my-project/action/act_123
+  - priceAlert (actionId = act_789, versionId = ver_012) https://dashboard.tenderly.co/my-project/action/act_789
+  ```
+</Accordion>
+
+<Accordion title="Error Output">
+  ```bash
+  $ tenderly contracts push
+  
+  Error: You need to initiate the project first.
+  
+  You can do this by using the tenderly init command.
+  ```
+</Accordion>
+
+---
+
+## JSON Output
+
+JSON output is designed for programmatic consumption, scripting, and automation.
+
+### Usage
+
+```bash
+tenderly --output json [command]
+```
+
+### Features
+
+<Card title="Structured Data" icon="code">
+  All output is valid JSON that can be parsed by tools like `jq`, programming languages, or other CLI tools
+</Card>
+
+<Card title="Machine Readable" icon="microchip">
+  No colors, spinners, or formatting characters - just pure JSON data
+</Card>
+
+<Card title="Consistent Format" icon="check">
+  Predictable structure across all commands makes automation reliable
+</Card>
+
+### Examples
+
+<Accordion title="Whoami JSON Output">
+  ```bash
+  $ tenderly --output json whoami
+  ```
+  
+  ```json
+  {
+    "id": "abc123def456",
+    "email": "user@example.com",
+    "username": "myusername",
+    "type": "user"
+  }
+  ```
+  
+  **For Organizations:**
+  ```json
+  {
+    "id": "org_abc123",
+    "organization_name": "My Company",
+    "username": "my-company",
+    "type": "organization"
+  }
+  ```
+</Accordion>
+
+<Accordion title="Version JSON Output">
+  ```bash
+  $ tenderly --output json version
+  ```
+  
+  ```json
+  {
+    "version": "v2.5.0",
+    "build_date": "2024-03-10",
+    "commit": "a1b2c3d4"
+  }
+  ```
+</Accordion>
+
+<Accordion title="Error JSON Output">
+  ```bash
+  $ tenderly --output json contracts push
+  ```
+  
+  ```json
+  {
+    "error": {
+      "message": "Project not initialized",
+      "code": "PROJECT_NOT_INIT",
+      "suggestion": "Run 'tenderly init' to initialize the project"
+    }
+  }
+  ```
+</Accordion>
+
+---
+
+## Parsing JSON Output
+
+JSON output is particularly useful for automation and scripting.
+
+### Using jq
+
+`jq` is a powerful JSON processor for the command line.
+
+<CodeGroup>
+```bash Extract User ID
+# Get just the user ID
+USER_ID=$(tenderly --output json whoami | jq -r '.id')
+echo $USER_ID
+```
+
+```bash Extract Username
+# Get the username
+USERNAME=$(tenderly --output json whoami | jq -r '.username')
+echo "Logged in as: $USERNAME"
+```
+
+```bash Check if Organization
+# Check if logged in as organization
+IS_ORG=$(tenderly --output json whoami | jq -r '.type == "organization"')
+if [ "$IS_ORG" = "true" ]; then
+  echo "Organization account"
+else
+  echo "User account"
+fi
+```
+
+```bash Pretty Print
+# Pretty print JSON output
+tenderly --output json whoami | jq .
+```
+</CodeGroup>
+
+### Using Python
+
+```python
+import json
+import subprocess
+
+# Run command and capture output
+result = subprocess.run(
+    ['tenderly', '--output', 'json', 'whoami'],
+    capture_output=True,
+    text=True
+)
+
+# Parse JSON
+data = json.loads(result.stdout)
+
+# Access fields
+user_id = data['id']
+username = data['username']
+email = data.get('email', 'N/A')
+
+print(f"User: {username} ({email})")
+print(f"ID: {user_id}")
+```
+
+### Using Node.js
+
+```javascript
+const { execSync } = require('child_process');
+
+// Run command and capture output
+const output = execSync('tenderly --output json whoami', { 
+  encoding: 'utf-8' 
+});
+
+// Parse JSON
+const data = JSON.parse(output);
+
+// Access fields
+console.log(`User: ${data.username}`);
+console.log(`ID: ${data.id}`);
+if (data.email) {
+  console.log(`Email: ${data.email}`);
+}
+```
+
+### Using Shell Scripts
+
+```bash
+#!/bin/bash
+
+# Get user info
+USER_JSON=$(tenderly --output json whoami)
+
+# Parse with jq
+USER_ID=$(echo $USER_JSON | jq -r '.id')
+USERNAME=$(echo $USER_JSON | jq -r '.username')
+USER_TYPE=$(echo $USER_JSON | jq -r '.type')
+
+# Use the data
+if [ "$USER_TYPE" = "organization" ]; then
+  ORG_NAME=$(echo $USER_JSON | jq -r '.organization_name')
+  echo "Logged in as organization: $ORG_NAME"
+else
+  EMAIL=$(echo $USER_JSON | jq -r '.email')
+  echo "Logged in as user: $EMAIL"
+fi
+
+echo "Username: $USERNAME"
+echo "ID: $USER_ID"
+```
+
+---
+
+## Logging and Debug Output
+
+The `--debug` flag enables verbose logging regardless of output mode.
+
+### Debug Mode
+
+```bash
+tenderly --debug [command]
+# or with JSON output
+tenderly --debug --output json [command]
+```
+
+### What Debug Mode Shows
+
+<Accordion title="API Requests">
+  Details about HTTP requests made to Tenderly API:
+  - Request method and URL
+  - Request headers
+  - Request body
+  - Response status
+  - Response body
+</Accordion>
+
+<Accordion title="File Operations">
+  Information about file system operations:
+  - Files being read
+  - Directories being scanned
+  - Build artifacts being processed
+  - Config files being loaded
+</Accordion>
+
+<Accordion title="Processing Steps">
+  Internal processing details:
+  - Contract compilation detection
+  - Network resolution
+  - Action function resolution
+  - Validation steps
+</Accordion>
+
+### Debug Output Example
+
+```bash
+$ tenderly --debug contracts push
+
+[DEBUG] Reading config from: /home/user/project/tenderly.yaml
+[DEBUG] Project config: {"project_slug":"my-project","account_id":"user123"}
+[DEBUG] Detecting provider...
+[DEBUG] Found Hardhat config at: /home/user/project/hardhat.config.js
+[DEBUG] Build directory: /home/user/project/artifacts
+[DEBUG] Reading contracts from build directory...
+[DEBUG] Found 3 contracts
+[DEBUG] API Request: POST https://api.tenderly.co/api/v1/account/user123/project/my-project/contracts
+[DEBUG] Request body: {"contracts":[...],"config":{...}}
+[DEBUG] Response status: 200
+[DEBUG] Response body: {"contracts":[{"id":"cnt_123",...}]}
+
+Successfully pushed Smart Contracts for project my-project.
+```
+
+---
+
+## CI/CD Integration
+
+Combine output modes and logging for effective CI/CD pipelines.
+
+### GitHub Actions Example
+
+<CodeGroup>
+```yaml Basic
+name: Deploy Contracts
+
+on: [push]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Tenderly CLI
+        run: curl https://raw.githubusercontent.com/Tenderly/tenderly-cli/master/scripts/install-linux.sh | sh
+      
+      - name: Login to Tenderly
+        run: |
+          tenderly login \
+            --authentication-method access-key \
+            --access-key ${{ secrets.TENDERLY_ACCESS_KEY }} \
+            --force
+      
+      - name: Push contracts
+        run: tenderly contracts push
+```
+
+```yaml With JSON Parsing
+name: Deploy and Notify
+
+on: [push]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install tools
+        run: |
+          curl https://raw.githubusercontent.com/Tenderly/tenderly-cli/master/scripts/install-linux.sh | sh
+          sudo apt-get install -y jq
+      
+      - name: Login to Tenderly
+        run: |
+          tenderly login \
+            --authentication-method access-key \
+            --access-key ${{ secrets.TENDERLY_ACCESS_KEY }} \
+            --force
+      
+      - name: Get user info
+        id: user
+        run: |
+          USER_INFO=$(tenderly --output json whoami)
+          USERNAME=$(echo $USER_INFO | jq -r '.username')
+          echo "username=$USERNAME" >> $GITHUB_OUTPUT
+      
+      - name: Push contracts
+        run: tenderly contracts push
+      
+      - name: Notify
+        run: |
+          echo "Contracts deployed by ${{ steps.user.outputs.username }}"
+```
+
+```yaml With Debug Logging
+name: Deploy with Debug
+
+on: [push]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Tenderly CLI
+        run: curl https://raw.githubusercontent.com/Tenderly/tenderly-cli/master/scripts/install-linux.sh | sh
+      
+      - name: Login to Tenderly
+        run: |
+          tenderly login \
+            --authentication-method access-key \
+            --access-key ${{ secrets.TENDERLY_ACCESS_KEY }} \
+            --force
+      
+      - name: Push contracts with debug
+        run: tenderly --debug contracts push
+        # Debug output will be visible in GitHub Actions logs
+```
+</CodeGroup>
+
+### Script Example
+
+```bash
+#!/bin/bash
+set -e
+
+# Configuration
+OUTPUT_MODE="json"
+DEBUG_FLAG="--debug"
+
+# Login
+echo "Logging in..."
+tenderly $DEBUG_FLAG login \
+  --authentication-method access-key \
+  --access-key "$TENDERLY_ACCESS_KEY" \
+  --force
+
+# Get user info
+echo "Getting user info..."
+USER_INFO=$(tenderly --output $OUTPUT_MODE whoami)
+USERNAME=$(echo $USER_INFO | jq -r '.username')
+echo "Logged in as: $USERNAME"
+
+# Push contracts
+echo "Pushing contracts..."
+if tenderly $DEBUG_FLAG contracts push; then
+  echo "✓ Contracts pushed successfully"
+  exit 0
+else
+  echo "✗ Failed to push contracts"
+  exit 1
+fi
+```
+
+---
+
+## Best Practices
+
+<Card title="Choose the Right Mode" icon="toggle-on">
+  - **Text mode** for interactive terminal use
+  - **JSON mode** for scripts and automation
+  - **Debug mode** for troubleshooting
+</Card>
+
+<Card title="Error Handling" icon="triangle-exclamation">
+  Always check exit codes in scripts:
+  ```bash
+  if ! tenderly contracts push; then
+    echo "Push failed"
+    exit 1
+  fi
+  ```
+  
+  The CLI returns:
+  - `0` on success
+  - `1` on error
+</Card>
+
+<Card title="Parse JSON Safely" icon="shield">
+  When using JSON output:
+  - Validate JSON before parsing
+  - Check for error fields
+  - Handle missing fields gracefully
+  - Use proper JSON parsers (jq, json.parse, etc.)
+</Card>
+
+<Card title="Capture Debug Logs" icon="file-lines">
+  In CI/CD, consider saving debug output:
+  ```bash
+  tenderly --debug contracts push 2>&1 | tee deploy.log
+  ```
+</Card>

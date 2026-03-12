@@ -1,97 +1,138 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Tenderly CLI"
+description: "Smart contract development, monitoring, and debugging made easy"
 ---
 
-## Setting up
+<div style={{
+  background: 'linear-gradient(135deg, #9074ee 0%, #6c5e8c 100%)',
+  borderRadius: '12px',
+  padding: '60px 40px',
+  marginBottom: '40px',
+  textAlign: 'center'
+}}>
+  <h1 style={{ fontSize: '48px', fontWeight: '700', color: '#ffffff', marginBottom: '20px' }}>
+    Tenderly CLI
+  </h1>
+  <p style={{ fontSize: '20px', color: '#e6e6f0', maxWidth: '700px', margin: '0 auto 30px' }}>
+    A powerful command-line tool for smart contract error tracking, monitoring, and alerting on Ethereum and EVM-compatible networks
+  </p>
+</div>
 
-Get your documentation site up and running in minutes.
+## Get Started
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+Start using Tenderly CLI in minutes.
 
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
+<CardGroup cols={2}>
   <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
+    title="Installation"
+    icon="download"
+    href="/installation"
   >
-    Edit your docs locally and preview them in real time.
-  </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+    Install the CLI on macOS, Linux, or Windows
   </Card>
   <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
+    title="Quickstart Guide"
+    icon="rocket"
+    href="/quickstart"
   >
-    Auto-generate API documentation from OpenAPI specifications.
+    Get up and running with your first project
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## Key Features
 
-Everything you need to create world-class documentation.
+Powerful tools for smart contract development and monitoring.
 
-<Columns cols={2}>
+<CardGroup cols={2}>
   <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
+    title="Contract Verification"
+    icon="check-circle"
+    href="/commands/contracts/verify"
   >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
+    Verify and monitor your smart contracts on any network
   </Card>
   <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
+    title="Actions"
+    icon="bolt"
+    href="/commands/actions/overview"
   >
-    Display images and other media.
+    Automate smart contract workflows with custom actions
   </Card>
   <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
+    title="DevNets"
+    icon="network-wired"
+    href="/commands/devnet/overview"
   >
-    Write once and reuse across your docs.
+    Spawn local blockchain networks for development
   </Card>
-</Columns>
+  <Card
+    title="Extensions"
+    icon="puzzle-piece"
+    href="/commands/extensions/overview"
+  >
+    Create custom RPC methods for your node
+  </Card>
+</CardGroup>
 
-## Need inspiration?
+## Framework Integration
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+Seamlessly integrate with your favorite development tools.
+
+<CardGroup cols={3}>
+  <Card
+    title="Hardhat"
+    icon="hammer"
+    href="/guides/hardhat-integration"
+  >
+    Integrate with Hardhat projects
+  </Card>
+  <Card
+    title="Truffle"
+    icon="cube"
+    href="/guides/truffle-integration"
+  >
+    Work with Truffle deployments
+  </Card>
+  <Card
+    title="Foundry"
+    icon="anvil"
+    href="/guides/foundry-integration"
+  >
+    Connect to Foundry workflows
+  </Card>
+</CardGroup>
+
+## Core Commands
+
+Essential commands to manage your smart contracts.
+
+<CardGroup cols={2}>
+  <Card
+    title="Login"
+    icon="right-to-bracket"
+    href="/commands/login"
+  >
+    Authenticate with your Tenderly account
+  </Card>
+  <Card
+    title="Initialize"
+    icon="gear"
+    href="/commands/init"
+  >
+    Set up a new Tenderly project
+  </Card>
+  <Card
+    title="Push Contracts"
+    icon="upload"
+    href="/commands/contracts/push"
+  >
+    Deploy contracts to Tenderly Dashboard
+  </Card>
+  <Card
+    title="Configuration"
+    icon="file-code"
+    href="/configuration/tenderly-yaml"
+  >
+    Configure your tenderly.yaml file
+  </Card>
+</CardGroup>

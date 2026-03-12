@@ -1,0 +1,266 @@
+---
+title: "tenderly init"
+description: "Initialize a Tenderly project in your development environment"
+---
+
+The `tenderly init` command sets up the Tenderly CLI for a project by creating a `tenderly.yaml` configuration file that links your local environment to a Tenderly project.
+
+## Usage
+
+```bash
+tenderly init [flags]
+```
+
+## Prerequisites
+
+<Note>
+  You must be logged in before initializing a project. Run `tenderly login` if you haven't authenticated yet.
+</Note>
+
+## Interactive Initialization
+
+Run the command without flags for an interactive setup:
+
+```bash
+tenderly init
+```
+
+The CLI will:
+1. Detect your deployment framework (Truffle, Hardhat, etc.)
+2. Verify the project directory structure
+3. Fetch your available Tenderly projects
+4. Prompt you to select or create a project
+
+**Example Output:**
+```
+? Select a project:
+  ▸ my-defi-project
+    nft-marketplace
+    + Create new project
+```
+
+## Flags
+
+<ParamField path="--project" type="string">
+  The project slug to use for initialization.
+  
+  If the project exists, it will be used automatically. If it doesn't exist, combine with `--create-project` to create it.
+  
+  ```bash
+  tenderly init --project my-project
+  ```
+</ParamField>
+
+<ParamField path="--create-project" type="boolean" default="false">
+  Creates the project specified by `--project` if it doesn't exist.
+  
+  ```bash
+  tenderly init --project new-project --create-project
+  ```
+</ParamField>
+
+<ParamField path="--re-init" type="boolean" default="false">
+  Force re-initialization of an already initialized project.
+  
+  Use this to change the project configuration or switch to a different Tenderly project.
+  
+  ```bash
+  tenderly init --re-init
+  ```
+</ParamField>
+
+<ParamField path="--force" type="boolean" default="false">
+  Skip directory structure validation.
+  
+  By default, the CLI validates that your current directory contains a supported framework structure (Truffle, Hardhat, etc.). Use this flag to initialize in any directory.
+  
+  ```bash
+  tenderly init --force
+  ```
+</ParamField>
+
+## Examples
+
+### Basic Initialization
+
+```bash
+cd my-smart-contract-project
+tenderly init
+```
+
+**Output:**
+```
+? Select a project:
+  ▸ my-project
+    another-project
+    + Create new project
+
+Project successfully initialized. You can change the project information by editing the tenderly.yaml file or by rerunning tenderly init with the --re-init flag.
+```
+
+### Initialize with Specific Project
+
+```bash
+tenderly init --project my-defi-protocol
+```
+
+### Create New Project During Init
+
+```bash
+tenderly init --project new-protocol --create-project
+```
+
+### Re-initialize Existing Project
+
+If you need to change project settings:
+
+```bash
+tenderly init --re-init
+```
+
+**Output:**
+```
+? Select a project:
+  ▸ different-project
+    my-project
+
+Project successfully initialized.
+```
+
+### Force Init Without Framework Detection
+
+```bash
+tenderly init --force
+```
+
+<Warning>
+  Using `--force` skips framework detection. Some features may not work correctly if the CLI cannot detect your deployment provider.
+</Warning>
+
+## What Gets Created
+
+After successful initialization, a `tenderly.yaml` file is created in your project directory:
+
+```yaml tenderly.yaml
+account_id: your-account-id
+project_slug: your-project-slug
+provider: hardhat
+```
+
+### Configuration Fields
+
+- **account_id**: Your Tenderly account ID
+- **project_slug**: The project identifier (format: `username/project-name` for shared projects, or just `project-name` for personal projects)
+- **provider**: The detected deployment framework (e.g., `hardhat`, `truffle`, `foundry`)
+
+## Behavior
+
+<Steps>
+
+<Step title="Authentication Check">
+  Verifies you're logged in. If not, prompts you to run `tenderly login`.
+</Step>
+
+<Step title="Detect Framework">
+  Unless `--force` is used, detects your deployment framework by checking for:
+  - Hardhat configuration files
+  - Truffle directories
+  - Foundry structure
+  - Other supported frameworks
+</Step>
+
+<Step title="Check Existing Configuration">
+  If `tenderly.yaml` exists and `--re-init` is not provided:
+  
+  ```
+  The project is already initialized. If you want to set up the project again,
+  rerun this command with the --re-init flag.
+  ```
+</Step>
+
+<Step title="Fetch Available Projects">
+  Retrieves all projects associated with your account from the Tenderly API.
+</Step>
+
+<Step title="Project Selection">
+  - If `--project` is provided, uses that project
+  - Otherwise, presents an interactive selection menu
+  - Option to create a new project if needed
+</Step>
+
+<Step title="Write Configuration">
+  Creates or updates `tenderly.yaml` with:
+  - Account ID
+  - Project slug
+  - Provider name
+</Step>
+
+</Steps>
+
+## Error Scenarios
+
+### Not Logged In
+
+```
+You need to be logged in to use this command. Please run 'tenderly login' first.
+```
+
+**Solution:** Run `tenderly login`
+
+### Already Initialized
+
+```
+The project is already initialized. If you want to set up the project again,
+rerun this command with the --re-init flag.
+```
+
+**Solution:** Use `tenderly init --re-init`
+
+### Wrong Directory
+
+If not in a valid framework directory:
+
+```
+This command needs to be run in a valid project directory.
+```
+
+**Solution:** Navigate to your project root or use `--force` to skip validation
+
+### Failed to Fetch Projects
+
+```
+Fetching projects for account failed. This can happen if you are running an older version of the Tenderly CLI.
+```
+
+**Solution:** Update the CLI with `tenderly update`
+
+## Configuration Updates
+
+You can modify the generated `tenderly.yaml` file manually or use `--re-init`:
+
+<CodeGroup>
+
+```yaml Manual Edit
+account_id: your-account-id
+project_slug: new-project-slug
+provider: hardhat
+```
+
+```bash Re-initialize
+tenderly init --re-init
+```
+
+</CodeGroup>
+
+<Note>
+  The `tenderly.yaml` file should be committed to version control so team members can use the same Tenderly project.
+</Note>
+
+## Next Steps
+
+After initialization:
+
+1. **Push contracts**: Use `tenderly push` to upload your verified contracts
+2. **Export transactions**: Run `tenderly export` to analyze historical transactions
+3. **Configure monitoring**: Set up alerts and monitoring in the Tenderly dashboard
+4. **Run simulations**: Use `tenderly simulate` for transaction simulations

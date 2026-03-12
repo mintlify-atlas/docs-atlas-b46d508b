@@ -1,0 +1,361 @@
+---
+title: "tenderly contracts remove"
+description: "Remove contracts from your Tenderly project"
+---
+
+## Overview
+
+The `tenderly contracts remove` command removes smart contracts from your Tenderly project. You can remove contracts by tag, by ID, or remove all contracts from a project.
+
+<Warning>
+Removing contracts is irreversible. Historical transaction data associated with these contracts will no longer be accessible in your project.
+</Warning>
+
+## Usage
+
+```bash
+tenderly contracts remove [flags]
+```
+
+## Flags
+
+<ParamField path="--tag" type="string">
+  Remove all contracts with the specified tag from the configured project.
+  
+  ```bash
+  tenderly contracts remove --tag "v1.0.0"
+  ```
+  
+  This is useful for:
+  - Cleaning up old deployment versions
+  - Removing test deployments
+  - Managing staged environments
+</ParamField>
+
+<ParamField path="--id" type="string">
+  Remove a specific contract by its unique identifier. The ID format is `eth:{network_id}:{contract_address}`.
+  
+  ```bash
+  tenderly contracts remove --id "eth:1:0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+  ```
+  
+  **ID Format**: `eth:{network_id}:{contract_address}`
+  - `eth` - Protocol prefix
+  - `{network_id}` - Network chain ID (e.g., `1` for Mainnet)
+  - `{contract_address}` - Contract address (checksummed or lowercase)
+</ParamField>
+
+<ParamField path="--project-slug" type="string">
+  The slug of the project from which to remove contracts. Use this when you have multiple projects configured.
+  
+  ```bash
+  tenderly contracts remove --project-slug "my-project" --tag "staging"
+  ```
+</ParamField>
+
+## Configuration
+
+Configure your `tenderly.yaml` file:
+
+### Single Project
+
+```yaml tenderly.yaml
+account_id: your-username
+project_slug: my-project
+```
+
+### Multiple Projects
+
+```yaml tenderly.yaml
+projects:
+  my-mainnet-project:
+    networks:
+      - "1"
+  my-testnet-project:
+    networks:
+      - "5"
+      - "11155111"
+```
+
+<Note>
+When using multiple projects, specify which project to remove contracts from using the `--project-slug` flag.
+</Note>
+
+## Examples
+
+### Remove All Contracts
+
+Remove all contracts from the configured project:
+
+```bash
+tenderly contracts remove
+```
+
+<Warning>
+Without any flags, this command removes **ALL** contracts from the project. Use with caution!
+</Warning>
+
+### Remove by Tag
+
+Remove all contracts tagged with a specific version:
+
+```bash
+tenderly contracts remove --tag "v1.0.0"
+```
+
+Remove staging environment contracts:
+
+```bash
+tenderly contracts remove --tag "staging"
+```
+
+### Remove by Contract ID
+
+Remove a specific contract from Ethereum Mainnet:
+
+```bash
+tenderly contracts remove --id "eth:1:0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+```
+
+Remove a contract from Polygon:
+
+```bash
+tenderly contracts remove --id "eth:137:0x1234567890123456789012345678901234567890"
+```
+
+### Remove from Specific Project
+
+When you have multiple projects, target a specific one:
+
+```bash
+tenderly contracts remove --project-slug "my-testnet-project" --tag "old-version"
+```
+
+### Combined Flags
+
+Remove specific contracts from a specific project:
+
+```bash
+tenderly contracts remove \
+  --project-slug "my-project" \
+  --tag "experimental"
+```
+
+## Finding Contract IDs
+
+To find contract IDs for removal:
+
+### Method 1: Tenderly Dashboard
+
+1. Go to your [Tenderly Dashboard](https://dashboard.tenderly.co)
+2. Navigate to **Contracts** in your project
+3. Click on the contract you want to remove
+4. Copy the ID from the URL or contract details
+
+### Method 2: Tenderly API
+
+You can also query contract IDs via the Tenderly API:
+
+```bash
+curl -X GET \
+  "https://api.tenderly.co/api/v1/account/{username}/project/{project-slug}/contracts" \
+  -H "X-Access-Key: {your-access-key}"
+```
+
+### Method 3: From Push Output
+
+When you push contracts, note the contract addresses. The ID format is:
+
+```
+eth:{network_id}:{contract_address}
+```
+
+For example:
+- Contract: `0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb`
+- Network: Ethereum Mainnet (`1`)
+- ID: `eth:1:0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb`
+
+## Removal Behavior
+
+<Steps>
+  <Step title="Contract selection">
+    The CLI identifies contracts to remove based on your flags:
+    - No flags: All contracts in the project
+    - `--tag`: All contracts with matching tag
+    - `--id`: Single specific contract
+  </Step>
+  
+  <Step title="Batch removal">
+    All selected contracts are removed in a single operation:
+    
+    ```bash
+    Removing Smart Contracts for project: my-project
+    Successfully removed all selected smart contracts.
+    ```
+  </Step>
+  
+  <Step title="Verification">
+    Verify removal in the Tenderly Dashboard. Removed contracts no longer appear in the contracts list.
+  </Step>
+</Steps>
+
+## Multi-Project Removal
+
+When working with multiple projects:
+
+```yaml tenderly.yaml
+projects:
+  production:
+    networks:
+      - "1"
+      - "137"
+  staging:
+    networks:
+      - "5"
+```
+
+Remove contracts from specific projects:
+
+```bash
+# Remove from production
+tenderly contracts remove --project-slug "production" --tag "deprecated"
+
+# Remove from staging
+tenderly contracts remove --project-slug "staging"
+```
+
+## What Gets Removed
+
+When you remove a contract:
+
+- Contract source code and verification data
+- Contract metadata (name, tags, etc.)
+- Association with the project
+
+**What is NOT removed:**
+
+- Historical blockchain data (transactions remain on-chain)
+- Forked networks that include the contract
+- Simulations that used the contract
+
+<Note>
+Removed contracts can be re-added to the project by running [`tenderly contracts push`](/commands/contracts/push) again.
+</Note>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Project configuration not found">
+    **Cause**: Invalid project slug or missing `tenderly.yaml`.
+    
+    **Solution**:
+    ```bash
+    # Verify tenderly.yaml exists
+    cat tenderly.yaml
+    
+    # Check project slug
+    tenderly whoami
+    
+    # Re-initialize if needed
+    tenderly init
+    ```
+  </Accordion>
+  
+  <Accordion title="Contract ID not found">
+    **Cause**: Invalid contract ID format or contract doesn't exist.
+    
+    **Solution**:
+    1. Verify ID format: `eth:{network_id}:{address}`
+    2. Check network ID is correct
+    3. Ensure contract exists in the project
+    4. Verify address checksum
+  </Accordion>
+  
+  <Accordion title="No contracts with specified tag">
+    **Cause**: No contracts have the specified tag.
+    
+    **Solution**:
+    1. Check available tags in Tenderly Dashboard
+    2. Verify tag spelling (case-sensitive)
+    3. List all contracts to see their tags
+  </Accordion>
+  
+  <Accordion title="Removal failed for some projects">
+    **Cause**: Multiple projects configured, some may have errors.
+    
+    **Solution**:
+    1. Check error messages for specific projects
+    2. Use `--project-slug` to target one project at a time
+    3. Verify project access permissions
+  </Accordion>
+</AccordionGroup>
+
+## Use Cases
+
+### Clean Up Old Versions
+
+Remove outdated contract versions:
+
+```bash
+# Remove old version
+tenderly contracts remove --tag "v1.0.0"
+
+# Keep current version (v2.0.0) untouched
+```
+
+### Remove Test Deployments
+
+Clean up after testing:
+
+```bash
+tenderly contracts remove --tag "test" --project-slug "testnet-project"
+```
+
+### Manage Staging Environment
+
+Remove staged contracts before production:
+
+```bash
+tenderly contracts remove --tag "staging"
+```
+
+### Remove Specific Failed Deployment
+
+Remove a single problematic contract:
+
+```bash
+tenderly contracts remove --id "eth:5:0xBADCONTRACTADDRESS"
+```
+
+## Best Practices
+
+1. **Use tags consistently**: Tag contracts during push for easier removal later
+   ```bash
+   tenderly contracts push --tag "v1.0.0"
+   # Later
+   tenderly contracts remove --tag "v1.0.0"
+   ```
+
+2. **Verify before removing**: Check which contracts will be removed
+   - Review contracts in the Dashboard
+   - Confirm tags match expected contracts
+
+3. **Document removals**: Keep track of removed contracts for auditing
+
+4. **Test in staging first**: Remove from test projects before production
+
+5. **Backup contract data**: Export important data before removal
+
+6. **Use specific targeting**: Prefer `--id` or `--tag` over removing all contracts
+
+## Related Commands
+
+- [`tenderly contracts push`](/commands/contracts/push) - Push contracts to Tenderly
+- [`tenderly contracts verify`](/commands/contracts/verify) - Verify contracts
+- [`tenderly init`](/commands/init) - Initialize project configuration
+
+## See Also
+
+- [Contract Management Documentation](https://docs.tenderly.co/monitoring/contracts)
+- [Tenderly Dashboard](https://dashboard.tenderly.co)
+- [Project Configuration Guide](https://docs.tenderly.co/tenderly-cli)

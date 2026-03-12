@@ -1,80 +1,297 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Get up and running with Tenderly CLI in minutes"
 ---
 
-## Get started in three steps
+Get started with Tenderly CLI by following this step-by-step guide. You'll learn how to authenticate, initialize a project, and push your first smart contract to Tenderly.
 
-Get your documentation site running locally and make your first customization.
+## Prerequisites
 
-### Step 1: Set up your local environment
+Before you begin, make sure you have:
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+- Tenderly CLI installed (see [Installation](/installation))
+- A Tenderly account (sign up at [dashboard.tenderly.co](https://dashboard.tenderly.co))
+- A smart contract project (Hardhat, Truffle, Foundry, or Brownie)
 
-### Step 2: Deploy your changes
+## Step 1: Authenticate
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+First, log in to your Tenderly account using the CLI:
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+<CodeGroup>
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+```bash Interactive Login
+tenderly login
+```
 
-### Step 3: Go live
+```bash Email/Password
+tenderly login --authentication-method email --email your@email.com --password yourpassword
+```
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+```bash Access Key
+tenderly login --authentication-method access-key --access-key YOUR_ACCESS_KEY
+```
 
-## Next steps
+</CodeGroup>
 
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
+The interactive login will open your browser and prompt you to authorize the CLI.
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+For CI/CD environments, use the access key method. You can generate an access key in your [Tenderly Dashboard](https://dashboard.tenderly.co/account/authorization).
 </Note>
+
+## Step 2: Initialize Your Project
+
+Navigate to your smart contract project directory and initialize Tenderly:
+
+```bash
+cd your-project-directory
+tenderly init
+```
+
+This command will:
+1. Detect your project type (Hardhat, Truffle, Foundry, or Brownie)
+2. Prompt you to select or create a Tenderly project
+3. Create a `tenderly.yaml` configuration file
+
+<Tabs>
+  <Tab title="Interactive Mode">
+    The CLI will guide you through:
+    - Selecting an existing project or creating a new one
+    - Configuring your project settings
+    
+    ```bash
+    tenderly init
+    # Select a project or create a new one
+    # Answer the prompts to complete setup
+    ```
+  </Tab>
+  
+  <Tab title="Non-Interactive Mode">
+    Specify all options via flags:
+    
+    ```bash
+    tenderly init --project my-project --create-project
+    ```
+  </Tab>
+</Tabs>
+
+### Example tenderly.yaml
+
+After initialization, your `tenderly.yaml` file will look like this:
+
+```yaml
+account_id: ""
+project_slug: my-project
+```
+
+## Step 3: Configure Your Framework
+
+Depending on your framework, you may need additional setup:
+
+<Tabs>
+  <Tab title="Hardhat">
+    Install the Tenderly Hardhat plugin:
+    
+    ```bash
+    npm install --save-dev @tenderly/hardhat-tenderly
+    ```
+    
+    Add to your `hardhat.config.js`:
+    
+    ```javascript
+    require("@tenderly/hardhat-tenderly");
+    ```
+    
+    Or for TypeScript (`hardhat.config.ts`):
+    
+    ```typescript
+    import "@tenderly/hardhat-tenderly";
+    ```
+    
+    See the [Hardhat Integration Guide](/guides/hardhat-integration) for complete details.
+  </Tab>
+  
+  <Tab title="Truffle">
+    Tenderly CLI automatically detects Truffle projects. No additional setup needed!
+    
+    See the [Truffle Integration Guide](/guides/truffle-integration) for more details.
+  </Tab>
+  
+  <Tab title="Foundry">
+    For Foundry projects, you'll verify contracts directly after deployment.
+    
+    See the [Foundry Integration Guide](/guides/foundry-integration) for complete details.
+  </Tab>
+</Tabs>
+
+## Step 4: Deploy and Verify Your Contracts
+
+Now you're ready to deploy and push your contracts to Tenderly!
+
+<Steps>
+  <Step title="Deploy your contracts">
+    Deploy your contracts to your target network using your framework's deployment tools:
+    
+    <CodeGroup>
+    
+    ```bash Hardhat
+    npx hardhat run scripts/deploy.js --network mainnet
+    ```
+    
+    ```bash Truffle
+    truffle migrate --network mainnet
+    ```
+    
+    ```bash Foundry
+    forge script script/Deploy.s.sol --rpc-url $RPC_URL --broadcast
+    ```
+    
+    </CodeGroup>
+  </Step>
+  
+  <Step title="Push contracts to Tenderly">
+    After deployment, push your contracts to the Tenderly Dashboard:
+    
+    ```bash
+    tenderly contracts push
+    ```
+    
+    You can specify networks:
+    
+    ```bash
+    tenderly contracts push --networks 1,5
+    ```
+    
+    Or add a tag for organization:
+    
+    ```bash
+    tenderly contracts push --tag v1.0.0
+    ```
+  </Step>
+  
+  <Step title="Verify contracts">
+    Alternatively, verify contracts without adding them to your project:
+    
+    ```bash
+    tenderly contracts verify
+    ```
+  </Step>
+</Steps>
+
+## Step 5: View Your Contracts
+
+After pushing, you'll see output like this:
+
+```
+Successfully pushed Smart Contracts for project my-project. You can view your contracts at:
+https://dashboard.tenderly.co/contract/mainnet/0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb
+```
+
+Visit the URL to see your contract in the Tenderly Dashboard, where you can:
+- Debug transactions
+- Monitor contract activity
+- Set up alerts
+- Simulate transactions
+
+## Common Workflows
+
+<AccordionGroup>
+  <Accordion title="Development Workflow">
+    For local development and testing:
+    
+    ```bash
+    # 1. Start local network
+    npx hardhat node
+    
+    # 2. Deploy contracts
+    npx hardhat run scripts/deploy.js --network localhost
+    
+    # 3. Verify on Tenderly
+    tenderly contracts verify --networks 31337
+    ```
+  </Accordion>
+  
+  <Accordion title="Production Deployment">
+    For mainnet or testnet deployments:
+    
+    ```bash
+    # 1. Deploy to network
+    npx hardhat run scripts/deploy.js --network mainnet
+    
+    # 2. Push to Tenderly with tag
+    tenderly contracts push --networks 1 --tag production-v1.0.0
+    ```
+  </Accordion>
+  
+  <Accordion title="Multi-Network Deployment">
+    For deploying across multiple networks:
+    
+    ```bash
+    # Deploy to multiple networks
+    tenderly contracts push --networks 1,137,42161
+    ```
+    
+    Configure in `tenderly.yaml`:
+    
+    ```yaml
+    project_slug: my-project
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+Now that you've completed the quickstart, explore more features:
+
+<CardGroup cols={2}>
+  <Card title="Contract Management" icon="file-contract" href="/commands/contracts/push">
+    Learn advanced contract management features
+  </Card>
+  <Card title="Web3 Actions" icon="bolt" href="/commands/actions/overview">
+    Automate workflows with Web3 Actions
+  </Card>
+  <Card title="DevNets" icon="network-wired" href="/commands/devnet/overview">
+    Create development networks on-demand
+  </Card>
+  <Card title="Configuration" icon="gear" href="/configuration/tenderly-yaml">
+    Customize your tenderly.yaml configuration
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Authentication fails">
+    If login fails, try:
+    - Check your credentials
+    - Use `--force` to override existing login
+    - Generate a new access key from the Dashboard
+    
+    ```bash
+    tenderly login --force
+    ```
+  </Accordion>
+  
+  <Accordion title="Project not initialized">
+    If you see "You need to initiate the project first":
+    
+    ```bash
+    tenderly init --re-init
+    ```
+  </Accordion>
+  
+  <Accordion title="No contracts found">
+    Ensure your project has:
+    - Compiled artifacts (build files)
+    - Deployment records
+    - Valid project structure for your framework
+    
+    For Hardhat, make sure you're using the `@tenderly/hardhat-tenderly` plugin.
+  </Accordion>
+</AccordionGroup>
+
+## Getting Help
+
+- Read the full [CLI Reference](/reference/command-list)
+- Check out the [Configuration Guide](/configuration/tenderly-yaml)
+- Contact support at [support@tenderly.co](mailto:support@tenderly.co)
